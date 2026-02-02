@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>主页</title>
+  <script src="/static/js/jquery-3.6.0.min.js"></script>
+  <script src="/static/js/auth-guard.js"></script>
+  <style>
+    html,body{height:100%;margin:0}
+    body{font-family: Arial, Helvetica, sans-serif;margin:0;height:100vh;background-image: url('/static/img/bg.jpg');background-size: cover;background-position: center;background-repeat: no-repeat}
+    .card{width:100%;height:100%;background:rgba(255,255,255,0.95);padding:24px;border-radius:0;box-shadow:none;box-sizing:border-box}
+    /* ensure the articles container can display 10 rows without internal scroll (10 * row-height) */
+    #articles{min-height:calc(56px * 10);overflow:visible;max-height:none}
+
+    /* layout */
+    .content-wrapper{display:flex;gap:16px}
+    .mainContent{flex:1;min-width:0}
+    .sidebar{width:220px;flex-shrink:0}
+    .sidebar h4{margin:0 0 8px 0}
+    #labelList{display:flex;flex-wrap:wrap}
+
+    /* tag button styling: light green background, black text, smaller and lighter than title */
+    .tagBtn{background:#e6f4ea;color:#111;border:none;padding:4px 8px;border-radius:6px;font-size:12px;opacity:0.95;cursor:pointer;margin-right:6px;margin-bottom:6px}
+    .tagBtn:hover{background:#d6eed8}
+    .tagBtn:focus{outline:2px solid rgba(25,118,210,0.2);outline-offset:2px}
+    /* label button (sidebar) active state */
+    .labelBtn.active{background:#1976d2;color:#fff}
+
+    /* article table */
+    .articleTable{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
+    .articleTable th{text-align:left;padding:10px;border-bottom:1px solid #eee;color:#333}
+    .articleTable td{padding:10px;border-bottom:1px solid #f3f3f3;vertical-align:middle;overflow:hidden}
+    .articleTable tbody tr{height:56px}
+    .articleTable td{line-height:56px}
+    .articleTable .titleCell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
+    .articleTable .tagsCell{max-width:320px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .articleTable .actionsCell{white-space:nowrap}
+    .articleTable .tagsCell .tagBtn{display:inline-block;margin-right:6px}
+    button{padding:10px 14px;border-radius:6px;border:none;background:#1976d2;color:#fff}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h2 id="welcome">文章列表</h2>
+        <p id="info"></p>
+      </div>
+      <div style="text-align:right">
+        <div id="userInfo" style="margin-bottom:8px">欢迎，<span id="username">用户</span>
+          <div id="loginInfo" style="font-size:12px;color:#666;margin-top:4px">您尚未登录</div>
+        </div>
+        <div>
+          <button id="new">发布文章</button>
+          <button id="logout">退出登录</button>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="content-wrapper">
+      <div class="mainContent">
+        <div id="articles">
+          <p>加载中...</p>
+        </div>
+
+        <div id="pager" style="margin-top:16px;display:flex;justify-content:center;gap:8px;align-items:center">
+          <button id="prev" disabled>上一页</button>
+          <span id="pageInfo">第 <span id="pageNum">1</span> 页</span>
+          <button id="clearFilter" style="display:none;background:#f5f5f5;color:#333;border-radius:6px;padding:6px 8px;border:none;cursor:pointer">清除筛选</button>
+          <button id="next" disabled>下一页</button>
+        </div>
+      </div>
+
+      <aside class="sidebar">
+        <h4>标签</h4>
+        <div id="labelList">
+          <button class="tagBtn labelBtn" data-tag="" aria-label="所有" tabindex="0">所有</button>
+          <div id="labelsLoading" style="color:#666;margin-top:8px">加载标签中...</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- modal for viewing/editing -->
+  <div id="modal" style="display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center">
+    <div style="background:#fff;padding:16px;border-radius:8px;max-width:800px;width:90%;max-height:80%;overflow:auto">
+      <h3 id="modalTitle"></h3>
+      <div id="modalMeta" style="color:#666;font-size:13px;margin-bottom:8px"></div>
+      <div id="modalBodyWrap"><div id="modalBody" style="white-space:pre-wrap;color:#333"></div></div>
+      <div id="editFields" style="display:none">
+        <label>标题</label>
+        <input id="editTitle" type="text" style="width:100%;padding:8px;margin:6px 0" />
+        <label>正文</label>
+        <textarea id="editBody" rows="12" style="width:100%;padding:8px;margin:6px 0"></textarea>
+      </div>
+      <div style="text-align:right;margin-top:8px">
+        <button id="modalCancel">关闭</button>
+        <button id="modalSave" style="display:none;margin-left:8px">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function getToken(){ try{ var t = localStorage.getItem('token'); if(t) return t }catch(e){} var m=document.cookie.match(/(^|; )token=([^;]+)/); return m?decodeURIComponent(m[2]):null }
+
+    function base64UrlDecode(str){ str = str.replace(/-/g, '+').replace(/_/g, '/'); while(str.length % 4) str += '='; try{ var bin = atob(str); var bytes = Array.prototype.map.call(bin, function(c){ return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join(''); return decodeURIComponent(bytes); }catch(e){ return null } }
+
+    function parseJwtPayload(token){ if(!token) return null; var parts = token.split('.'); if(parts.length < 2) return null; var payload = base64UrlDecode(parts[1]); if(!payload) return null; try{ return JSON.parse(payload) }catch(e){ return null } }
+
+    $(function(){
+      var token = getToken();
+      var payload = token ? parseJwtPayload(token) : null;
+      var user = payload && payload.sub ? payload.sub : '用户';
+      $('#username').text(user);
+      if(token){ $('#loginInfo').text('您已登录，有效期为 24 小时。') } else { $('#loginInfo').text('您尚未登录'); }
+
+      $('#logout').on('click', function(){ $('#logout').prop('disabled', true).text('正在退出...'); $.ajax({ url: '/users/logout', method: 'POST', success: function(){ try{ localStorage.removeItem('token') }catch(e){} document.cookie = 'token=;max-age=0;path=/'; window.location.href = '/users/to_login'; }, error: function(){ try{ localStorage.removeItem('token') }catch(e){} document.cookie = 'token=;max-age=0;path=/'; window.location.href = '/users/to_login'; } }) })
+      $('#new').on('click', function(){ window.location.href = '/static/new_article.html' })
+
+      var page = 1;
+      var limit = 10;
+      var currentTag = null;
+
+      function setActiveLabel(tag){
+        currentTag = tag || null;
+        $('#labelList .labelBtn').removeClass('active');
+        if(tag){
+          $('#labelList .labelBtn').filter(function(){ return $(this).data('tag') === tag }).addClass('active');
+          $('#clearFilter').show();
+        } else {
+          $('#clearFilter').hide();
+        }
+      }
+
+      function renderArticles(articles){
+        if(!articles || articles.length === 0){ $('#articles').html('<p>暂无文章</p>'); return }
+        var html = '';
+        html += '<table class="articleTable">';
+        html += '<thead><tr><th style="width:40%">标题</th><th style="width:20%">发布时间</th><th style="width:30%">标签</th><th style="width:10%">操作</th></tr></thead>';
+        html += '<tbody>';
+        articles.forEach(function(a){
+          html += '<tr>';
+          html += '<td class="titleCell" title="'+(a.title||'')+'">'+(a.title||'')+'</td>';
+          html += '<td style="color:#666;font-size:13px">'+(new Date(a.published_at)).toLocaleString()+'</td>';
+          html += '<td class="tagsCell">';
+          if(a.tags && a.tags.length){
+            a.tags.forEach(function(t){ html += '<button class="tagBtn" data-tag="'+t+'" title="'+t+'" aria-label="标签: '+t+'" tabindex="0" style="padding:4px 6px;font-size:12px;margin-right:6px">'+t+'</button>' });
+          }
+          html += '</td>';
+          html += '<td class="actionsCell">';
+          html += '<button class="viewBtn" data-id="'+a.id+'">查看</button>';
+          if (a.author === user) {
+            html += '<button class="editBtn" data-id="'+a.id+'" style="margin-left:6px">编辑</button>';
+          } else {
+            html += '<button class="editBtn" data-id="'+a.id+'" style="margin-left:6px;opacity:0.4;cursor:not-allowed" disabled>编辑</button>';
+          }
+          html += '</td>';
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        $('#articles').html(html);
+
+        // tag click and keyboard (Enter/Space) filters
+        $('.tagBtn').on('click', function(){
+          var tag = $(this).data('tag');
+          page = 1;
+          setActiveLabel(tag);
+          load(tag);
+          $('#pageNum').text(page);
+          $('#pageInfo').text('第 '+page+' 页（每页 '+limit+' 篇）' + (tag ? '，筛选标签: ' + tag : ''));
+        });
+        $('.tagBtn').on('keydown', function(e){ if(e.key==='Enter' || e.key===' ' || e.key==='Spacebar'){ e.preventDefault(); $(this).trigger('click'); } });
+
+        // attach handlers for view/edit buttons
+        $('.viewBtn').on('click', function(e){ e.preventDefault(); var id = $(this).data('id'); $.ajax({ url: '/articles/' + id, method: 'GET', success: function(res){ $('#modalTitle').text(res.title); var meta = '作者：'+res.author+' 发布：'+(new Date(res.published_at)).toLocaleString(); if(res.tags && res.tags.length){ meta += ' • 标签：' + res.tags.join(', ') } $('#modalMeta').text(meta); $('#modalBody').text(res.body); $('#editFields').hide(); $('#modalBodyWrap').show(); $('#modalSave').hide(); $('#modal').css('display','flex'); }, error: function(){ alert('加载失败') } }) });
+        $('.editBtn').on('click', function(e){ e.preventDefault(); if($(this).is(':disabled')) return; var id = $(this).data('id'); $.ajax({ url: '/articles/' + id, method: 'GET', success: function(res){ $('#modalTitle').text('编辑： '+res.title); $('#modalMeta').text('作者：'+res.author+' 发布：'+(new Date(res.published_at)).toLocaleString()); $('#editTitle').val(res.title); $('#editBody').val(res.body); $('#modalBodyWrap').hide(); $('#editFields').show(); $('#modalSave').show(); $('#modal').css('display','flex'); $('#modalSave').data('id', id); }, error: function(){ alert('加载失败') } }) });
+        $('#modalCancel').on('click', function(){ $('#modal').hide(); $('#editFields').hide(); $('#modalSave').hide(); });
+        $('#modalSave').on('click', function(){ var id = $(this).data('id'); var title = $('#editTitle').val().trim(); var body = $('#editBody').val().trim(); if(!title || !body){ alert('标题和正文不能为空'); return } var token = getToken(); $.ajax({ url: '/articles/'+id, method: 'PUT', contentType: 'application/json', data: JSON.stringify({title: title, body: body}), beforeSend: function(xhr){ if(token) xhr.setRequestHeader('Authorization','Bearer '+token) }, success: function(){ $('#modal').hide(); load(currentTag); }, error: function(xhr){ alert('更新失败: ' + (xhr.responseJSON && xhr.responseJSON.error || xhr.responseText || '')) } }) });
+      }
+
+      function renderLabels(labels){
+        $('#labelsLoading').remove();
+        var list = $('#labelList');
+        list.find('.labelBtn').remove();
+        if(list.find('.labelBtn[data-tag=""]').length === 0){
+          list.prepend('<button class="tagBtn labelBtn" data-tag="" aria-label="所有" tabindex="0">所有</button>');
+        }
+        labels.forEach(function(l){
+          // backend may return string or object, normalize
+          var name = (typeof l === 'string') ? l : (l.name || l.Name || '');
+          var btn = $('<button class="tagBtn labelBtn" data-tag="'+name+'" tabindex="0">'+name+'</button>');
+          list.append(btn);
+        });
+        $('#labelList .labelBtn').on('click', function(){
+          var tag = $(this).data('tag');
+          page = 1;
+          setActiveLabel(tag || null);
+          load(tag || null);
+          $('#pageNum').text(page);
+          $('#pageInfo').text('第 '+page+' 页（每页 '+limit+' 篇）' + (tag ? '，筛选标签: ' + tag : ''));
+        });
+      }
+
+      function load(tag){
+        currentTag = tag || null;
+        setActiveLabel(currentTag);
+        $('#articles').html('<p>加载中...</p>');
+        var url = '/articles?page='+page+'&limit='+limit;
+        if(currentTag) url += '&tag=' + encodeURIComponent(currentTag);
+        console.log('加载文章', {url: url, page: page, tag: currentTag});
+        $.ajax({ url: url, method: 'GET', success: function(res){ console.log('articles response', res);
+            if(!res || !res.articles){ $('#articles').html('<p>无返回文章数据</p>'); return }
+            renderArticles(res.articles || []);
+            $('#pageNum').text(page);
+            $('#prev').prop('disabled', page<=1);
+            $('#next').prop('disabled', (res.articles||[]).length < limit);
+          }, error: function(xhr){ var t = xhr && xhr.responseText ? xhr.responseText : ''; $('#articles').html('<p>加载失败: '+(t||'网络错误')+'</p>'); console.error('articles load failed', xhr); } })
+      }
+
+      $('#prev').on('click', function(){ if(page>1){ page--; load(currentTag); } });
+      $('#next').on('click', function(){ page++; load(currentTag); });
+
+      $('#clearFilter').on('click', function(){ page = 1; setActiveLabel(null); load(null); $('#pageNum').text(page); $('#pageInfo').text('第 '+page+' 页'); });
+
+      // fetch labels initially
+      $.ajax({ url: '/articles/labels', method: 'GET', success: function(res){ console.log('labels response', res); renderLabels(res.labels || []); }, error: function(xhr){ $('#labelsLoading').text('无法加载标签'); console.error('labels load failed', xhr); } });
+
+      load();
+    })
+  </script>
+</body>
+</html>

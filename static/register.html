@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>注册</title>
+  <script src="/static/js/jquery-3.6.0.min.js"></script>
+  <script src="/static/js/auth-guard.js"></script>
+  <style>
+    html,body{height:100%;margin:0}
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      padding:40px;
+      background-image: url('/static/img/bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .card{
+      width:100%;max-width:480px;background:rgba(255,255,255,0.9);padding:24px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    }
+    form{max-width:420px;margin:0}
+    input{width:100%;padding:8px;margin:6px 0;border:1px solid #ddd;border-radius:6px}
+    button{padding:10px 14px;border-radius:6px;border:none;background:#1976d2;color:#fff}
+    .msg{margin-top:12px;color:#333}
+    a{color:#1976d2}
+  </style>
+</head>
+<body>
+  <div class="card">
+  <h2>用户注册</h2>
+  <p><a href="/users/to_login">已有账号？去登录</a></p>
+  <form id="regForm">
+    <label>邮箱</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="email" id="email" name="email" required style="flex:1" />
+      <button type="button" id="sendBtn">发送验证码</button>
+    </div>
+    <label>验证码</label>
+    <input type="text" id="code" name="code" required />
+    <label>用户名</label>
+    <input type="text" id="username" name="username" required />
+    <label>密码</label>
+    <input type="password" id="password" name="password" required />
+    <button type="submit">注册</button>
+  </form>
+  <div class="msg" id="msg"></div>
+  </div>
+
+  <script>
+    $(function(){
+      $('#regForm').on('submit', function(e){
+        e.preventDefault();
+        var username = $('#username').val().trim();
+        var password = $('#password').val();
+        var email = $('#email').val().trim();
+        var code = $('#code').val().trim();
+        if(!email || !username || !password || !code){
+          $('#msg').text('请输入用户名和密码');
+          return;
+        }
+        $('#msg').text('正在提交...');
+        $.ajax({
+          url: '/users/register',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({username: username, password: password, email: email, code: code}),
+          success: function(res){
+            $('#msg').text('注册成功，正在跳转到登录页面...');
+            setTimeout(function(){ window.location.href = '/users/to_login'; }, 1200);
+          },
+
+          error: function(xhr){
+            var err = '注册失败';
+            try{ err = (xhr.responseJSON && xhr.responseJSON.error) || xhr.responseText || err }catch(e){}
+            $('#msg').text(err);
+          }
+        })
+      })
+    })
+    
+    // send code button
+    var sendTimer = null;
+    function startSendCooldown(sec){
+      var btn = $('#sendBtn');
+      btn.prop('disabled', true);
+      var left = sec;
+      btn.text('重新发送(' + left + 's)');
+      sendTimer = setInterval(function(){
+        left--;
+        if(left<=0){ clearInterval(sendTimer); sendTimer = null; btn.prop('disabled', false); btn.text('发送验证码'); return }
+        btn.text('重新发送(' + left + 's)');
+      }, 1000);
+    }
+
+    $('#sendBtn').on('click', function(){
+      var email = $('#email').val().trim();
+      if(!email){ $('#msg').text('请输入邮箱'); return }
+      $('#msg').text('发送中...');
+      $.ajax({
+        url: '/users/send_code',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({email: email}),
+        success: function(){ $('#msg').text('验证码已发送，请查收'); startSendCooldown(60) },
+        error: function(xhr){ var err='发送失败'; try{ err=(xhr.responseJSON && xhr.responseJSON.error) || xhr.responseText || err }catch(e){} $('#msg').text(err) }
+      })
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>登录</title>
+  <script src="/static/js/jquery-3.6.0.min.js"></script>
+  <script src="/static/js/auth-guard.js"></script>
+  <style>
+    html,body{height:100%;margin:0}
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      padding:40px;
+      background-image: url('/static/img/bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .card{
+      width:100%;max-width:480px;background:rgba(255,255,255,0.9);padding:24px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    }
+    form{max-width:420px;margin:0}
+    input{width:100%;padding:8px;margin:6px 0;border:1px solid #ddd;border-radius:6px}
+    button{padding:10px 14px;border-radius:6px;border:none;background:#1976d2;color:#fff}
+    .msg{margin-top:12px;color:#333}
+    pre{background:#f6f6f6;padding:8px}
+    a{color:#1976d2}
+  </style>
+</head>
+<body>
+  <div class="card">
+  <h2>用户登录</h2>
+  <p><a href="/users/to_register">去注册</a></p>
+  <form id="loginForm">
+    <label>用户名</label>
+    <input type="text" id="username" name="username" required />
+    <label>密码</label>
+    <input type="password" id="password" name="password" required />
+    <button type="submit">登录</button>
+  </form>
+  <div class="msg" id="msg"></div>
+  <div id="tokenWrap" style="margin-top:12px;display:none">
+    <label>返回的 token：</label>
+    <pre id="token"></pre>
+  </div>
+
+  </div>
+
+  <script>
+    // helper to retrieve token from localStorage or cookie
+    function getToken(){
+      try{ var t = localStorage.getItem('token'); if(t) return t }catch(e){}
+      var m = document.cookie.match(/(^|; )token=([^;]+)/);
+      return m ? decodeURIComponent(m[2]) : null;
+    }
+
+    // set Authorization header for all jQuery AJAX requests
+    $.ajaxSetup({
+      beforeSend: function(xhr){
+        var t = getToken();
+        if(t){ xhr.setRequestHeader('Authorization', 'Bearer ' + t); }
+      }
+    });
+
+    $(function(){
+      $('#loginForm').on('submit', function(e){
+        e.preventDefault();
+        var username = $('#username').val().trim();
+        var password = $('#password').val();
+        if(!username || !password){
+          $('#msg').text('请输入用户名和密码');
+          return;
+        }
+        $('#msg').text('正在提交...');
+        $.ajax({
+          url: '/users/login',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({username: username, password: password}),
+          success: function(res){
+            $('#msg').text('登录成功');
+            if(res.token){
+              $('#token').text(res.token); $('#tokenWrap').show();
+              // save token to localStorage and cookie (expires in 24h)
+              try{ localStorage.setItem('token', res.token); }catch(e){}
+              document.cookie = 'token=' + res.token + ';max-age=86400;path=/';
+              // redirect to home page
+              window.location.href = '/home';
+            }
+          },
+
+          error: function(xhr){
+            var err = '登录失败';
+            try{ err = (xhr.responseJSON && xhr.responseJSON.error) || xhr.responseText || err }catch(e){}
+            $('#msg').text(err);
+          }
+        })
+      })
+    })
+  </script>
+</body>
+</html>

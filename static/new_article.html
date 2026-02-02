@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>发布文章</title>
+  <script src="/static/js/jquery-3.6.0.min.js"></script>
+  <script src="/static/js/auth-guard.js"></script>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px}
+    .container{max-width:720px;margin:0 auto}
+    input[type=text], textarea{width:100%;padding:8px;margin:6px 0;border:1px solid #ccc;border-radius:4px}
+    button{padding:10px 14px;border-radius:6px;border:none;background:#1976d2;color:#fff}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>发布新文章</h2>
+    <form id="articleForm">
+      <label>标题</label>
+      <input type="text" name="title" id="title" required />
+      <label>正文</label>
+      <textarea name="body" id="body" rows="12" required></textarea>
+      <label>标签（输入用逗号分隔，或从下面选择）</label>
+      <input type="text" id="tagInput" placeholder="例如: go,web,gin" />
+      <div id="existingTags" style="margin:8px 0"></div>
+      <p>
+        <button type="submit">发布</button>
+        <button type="button" id="cancel">取消</button>
+      </p>
+      <div id="msg" style="color:#b00020"></div>
+    </form>
+  </div>
+
+  <script>
+    function getToken(){ try{var t=localStorage.getItem('token'); if(t) return t}catch(e){} var m=document.cookie.match(/(^|; )token=([^;]+)/); return m?decodeURIComponent(m[2]):null }
+
+    $(function(){
+      var token = getToken();
+      if(!token){ window.location.href = '/users/to_login'; return }
+
+      $('#cancel').on('click', function(){ window.location.href = '/home' })
+
+      $('#articleForm').on('submit', function(e){
+        e.preventDefault();
+        $('#msg').text('');
+        var typed = $('#tagInput').val().trim();
+        var tags = [];
+        if(typed){ tags = tags.concat(typed.split(',').map(function(s){ return s.trim() }).filter(Boolean)); }
+        // add checked tags
+        $('#existingTags input[type=checkbox]:checked').each(function(){ tags.push($(this).val()) });
+        var payload = { title: $('#title').val(), body: $('#body').val(), tags: tags };
+        $.ajax({
+          url: '/articles',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(payload),
+          beforeSend: function(xhr){ xhr.setRequestHeader('Authorization', 'Bearer ' + token) },
+          success: function(){ window.location.href = '/home' },
+          error: function(xhr){
+            var txt = '发布失败';
+            try{ var d = JSON.parse(xhr.responseText); if(d.error) txt = d.error }catch(e){}
+            $('#msg').text(txt);
+          }
+        })
+      })
+
+      // load existing labels
+      $.ajax({ url: '/articles/labels', method: 'GET', success: function(res){ if(res.labels && res.labels.length){ var html = ''; res.labels.forEach(function(l){ html += '<label style="margin-right:8px"><input type="checkbox" value="'+l+'"> '+l+'</label>' }); $('#existingTags').html(html) } } })
+    })
+  </script>
+</body>
+</html>
