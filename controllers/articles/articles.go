@@ -1,6 +1,7 @@
 package articles
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -88,6 +89,15 @@ func ListArticles(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal"})
 		return
 	}
+
+	// get total count
+	var total int64
+	query := models.DB.Model(&models.Article{}).Where("id_deleted = ?", false)
+	if tag != "" {
+		query = query.Joins("JOIN article_labels al ON al.article_id = articles.id").Joins("JOIN labels l ON l.id = al.label_id").Where("l.name = ?", tag)
+	}
+	query.Count(&total)
+
 	// return minimal fields including tags
 	type item struct {
 		ID          uint      `json:"id"`
@@ -104,7 +114,7 @@ func ListArticles(c *gin.Context) {
 		}
 		res = append(res, item{ID: a.ID, Title: a.Title, Author: a.Author, PublishedAt: a.PublishedAt, Tags: tags})
 	}
-	c.JSON(http.StatusOK, gin.H{"articles": res, "page": page, "limit": limit, "tag": tag})
+	c.JSON(http.StatusOK, gin.H{"articles": res, "page": page, "limit": limit, "tag": tag, "total": total})
 }
 
 // UpdateArticle handles PUT /articles/:id
@@ -123,8 +133,9 @@ func UpdateArticle(c *gin.Context) {
 		return
 	}
 	type req struct {
-		Title string `json:"title" binding:"required"`
-		Body  string `json:"body" binding:"required"`
+		Title string   `json:"title" binding:"required"`
+		Body  string   `json:"body" binding:"required"`
+		Tags  []string `json:"tags"`
 	}
 	var r req
 	if err := c.ShouldBindJSON(&r); err != nil {
@@ -132,7 +143,7 @@ func UpdateArticle(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := models.UpdateArticle(uint(id64), r.Title, r.Body, username); err != nil {
+	if err := models.UpdateArticle(uint(id64), r.Title, r.Body, username, r.Tags); err != nil {
 		logrus.Warnf("articles: update failed id=%v user=%s err=%v", id64, username, err)
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden or not found"})
 		return
@@ -153,6 +164,7 @@ func GetArticle(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
+	fmt.Printf("tags: %v\n", a.Tags)
 	c.JSON(http.StatusOK, gin.H{"id": a.ID, "title": a.Title, "body": a.Body, "author": a.Author, "published_at": a.PublishedAt, "tags": func() []string {
 		var t []string
 		for _, x := range a.Tags {

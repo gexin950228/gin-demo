@@ -39,6 +39,25 @@
       var token = getToken();
       if(!token){ window.location.href = '/users/to_login'; return }
 
+      // 为textarea添加实时换行缩进功能
+      $('#body').on('keydown', function(e){
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          var textarea = this;
+          var start = textarea.selectionStart;
+          var end = textarea.selectionEnd;
+          var text = $(textarea).val();
+          var before = text.substring(0, start);
+          var after = text.substring(end);
+          var newText = before + '\n　　' + after;
+          $(textarea).val(newText);
+          // 设置光标位置
+          setTimeout(function(){
+            textarea.selectionStart = textarea.selectionEnd = start + 3; // \n + 2个空格
+          }, 0);
+        }
+      });
+
       $('#cancel').on('click', function(){ window.location.href = '/home' })
 
       $('#articleForm').on('submit', function(e){

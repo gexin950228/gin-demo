@@ -17,6 +17,11 @@
     .content-wrapper{display:flex;gap:16px}
     .mainContent{flex:1;min-width:0}
     .sidebar{width:220px;flex-shrink:0}
+    .nav-sidebar{width:180px;flex-shrink:0;background:#f5f5f5;border-radius:8px;padding:16px}
+    .nav-sidebar h4{margin:0 0 12px 0;color:#333}
+    .nav-sidebar .nav-item{display:block;width:100%;padding:10px 12px;border:none;border-radius:6px;background:transparent;color:#333;text-align:left;cursor:pointer;margin-bottom:6px;transition:all 0.2s}
+    .nav-sidebar .nav-item:hover{background:#e0e0e0}
+    .nav-sidebar .nav-item.active{background:#1976d2;color:#fff}
     .sidebar h4{margin:0 0 8px 0}
     #labelList{display:flex;flex-wrap:wrap}
 
@@ -38,49 +43,84 @@
     .articleTable .actionsCell{white-space:nowrap}
     .articleTable .tagsCell .tagBtn{display:inline-block;margin-right:6px}
     button{padding:10px 14px;border-radius:6px;border:none;background:#1976d2;color:#fff}
+    
+    /* pagination buttons */
+    .page-btn{padding:6px 10px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#333;cursor:pointer;font-size:14px}
+    .page-btn:hover:not(:disabled){background:#f5f5f5}
+    .page-btn:focus{outline:2px solid rgba(25,118,210,0.2);outline-offset:2px}
+    #paginationControls span{margin:0 4px;color:#666}
   </style>
 </head>
 <body>
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div>
-        <h2 id="welcome">文章列表</h2>
+        <h2 id="welcome">文章管理系统</h2>
         <p id="info"></p>
       </div>
-      <div style="text-align:right">
-        <div id="userInfo" style="margin-bottom:8px">欢迎，<span id="username">用户</span>
-          <div id="loginInfo" style="font-size:12px;color:#666;margin-top:4px">您尚未登录</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="text-align:right">
+          <div id="userInfo">欢迎，<span id="username">用户</span>
+            <div id="loginInfo" style="font-size:12px;color:#666;margin-top:4px">您尚未登录</div>
+          </div>
         </div>
-        <div>
-          <button id="new">发布文章</button>
-          <button id="logout">退出登录</button>
-        </div>
+        <button id="logout">退出登录</button>
       </div>
     </div>
 
     <hr />
 
     <div class="content-wrapper">
+      <aside class="nav-sidebar">
+        <h4>导航</h4>
+        <button class="nav-item active" data-page="articles">文章</button>
+        <button class="nav-item" data-page="about">关于</button>
+        <button class="nav-item" data-page="contact">联系我们</button>
+      </aside>
+
       <div class="mainContent">
-        <div id="articles">
-          <p>加载中...</p>
+        <!-- 文章标签页内容 -->
+        <div id="articlesPage" style="display:flex;gap:16px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <h2>文章列表</h2>
+              <button id="new">发布文章</button>
+            </div>
+
+            <div id="articles">
+              <p>加载中...</p>
+            </div>
+
+            <div id="pager" style="margin-top:16px;display:flex;justify-content:center;gap:8px;align-items:center">
+              <button id="prev" disabled>上一页</button>
+              <span id="pageInfo">第 <span id="pageNum">1</span> 页</span>
+              <div id="paginationControls" style="display:flex;gap:4px;align-items:center"></div>
+              <button id="clearFilter" style="display:none;background:#f5f5f5;color:#333;border-radius:6px;padding:6px 8px;border:none;cursor:pointer">清除筛选</button>
+              <button id="next" disabled>下一页</button>
+            </div>
+          </div>
+
+          <aside class="sidebar">
+            <h4>标签</h4>
+            <div id="labelList">
+              <button class="tagBtn labelBtn" data-tag="" aria-label="所有" tabindex="0">所有</button>
+              <div id="labelsLoading" style="color:#666;margin-top:8px">加载标签中...</div>
+            </div>
+          </aside>
         </div>
 
-        <div id="pager" style="margin-top:16px;display:flex;justify-content:center;gap:8px;align-items:center">
-          <button id="prev" disabled>上一页</button>
-          <span id="pageInfo">第 <span id="pageNum">1</span> 页</span>
-          <button id="clearFilter" style="display:none;background:#f5f5f5;color:#333;border-radius:6px;padding:6px 8px;border:none;cursor:pointer">清除筛选</button>
-          <button id="next" disabled>下一页</button>
+        <!-- 关于标签页内容 -->
+        <div id="aboutPage" style="display:none">
+          <h2>关于我们</h2>
+          <p>这是一个简单的文章管理系统，用于发布和管理新闻文章。</p>
+        </div>
+
+        <!-- 联系我们标签页内容 -->
+        <div id="contactPage" style="display:none">
+          <h2>联系我们</h2>
+          <p>如有任何问题，请联系我们的管理员。管理员邮箱:gexin17812126257@163.com</p>
         </div>
       </div>
-
-      <aside class="sidebar">
-        <h4>标签</h4>
-        <div id="labelList">
-          <button class="tagBtn labelBtn" data-tag="" aria-label="所有" tabindex="0">所有</button>
-          <div id="labelsLoading" style="color:#666;margin-top:8px">加载标签中...</div>
-        </div>
-      </aside>
     </div>
   </div>
 
@@ -95,6 +135,9 @@
         <input id="editTitle" type="text" style="width:100%;padding:8px;margin:6px 0" />
         <label>正文</label>
         <textarea id="editBody" rows="12" style="width:100%;padding:8px;margin:6px 0"></textarea>
+        <label>标签（输入用逗号分隔，或从下面选择）</label>
+        <input type="text" id="editTagInput" placeholder="例如: go,web,gin" style="width:100%;padding:8px;margin:6px 0;border:1px solid #ccc;border-radius:4px" />
+        <div id="editExistingTags" style="margin:8px 0"></div>
       </div>
       <div style="text-align:right;margin-top:8px">
         <button id="modalCancel">关闭</button>
@@ -110,18 +153,27 @@
 
     function parseJwtPayload(token){ if(!token) return null; var parts = token.split('.'); if(parts.length < 2) return null; var payload = base64UrlDecode(parts[1]); if(!payload) return null; try{ return JSON.parse(payload) }catch(e){ return null } }
 
+    function formatTimeRemaining(seconds){ if(seconds <= 0) return '已过期'; var hours = Math.floor(seconds / 3600); var minutes = Math.floor((seconds % 3600) / 60); var secs = Math.floor(seconds % 60); return (hours > 0 ? hours + '小时' : '') + (minutes > 0 ? minutes + '分' : '') + secs + '秒' }
+
+    function updateLoginCountdown(){ var token = getToken(); var payload = token ? parseJwtPayload(token) : null; if(payload && payload.exp){ var now = Math.floor(Date.now() / 1000); var remaining = payload.exp - now; if(remaining > 0){ $('#loginInfo').text('您已登录，剩余有效期：' + formatTimeRemaining(remaining)) } else { $('#loginInfo').text('登录已过期，请重新登录') } } else { $('#loginInfo').text('您尚未登录') } }
+
     $(function(){
       var token = getToken();
       var payload = token ? parseJwtPayload(token) : null;
       var user = payload && payload.sub ? payload.sub : '用户';
       $('#username').text(user);
-      if(token){ $('#loginInfo').text('您已登录，有效期为 24 小时。') } else { $('#loginInfo').text('您尚未登录'); }
+      updateLoginCountdown();
+      setInterval(updateLoginCountdown, 1000);
 
       $('#logout').on('click', function(){ $('#logout').prop('disabled', true).text('正在退出...'); $.ajax({ url: '/users/logout', method: 'POST', success: function(){ try{ localStorage.removeItem('token') }catch(e){} document.cookie = 'token=;max-age=0;path=/'; window.location.href = '/users/to_login'; }, error: function(){ try{ localStorage.removeItem('token') }catch(e){} document.cookie = 'token=;max-age=0;path=/'; window.location.href = '/users/to_login'; } }) })
       $('#new').on('click', function(){ window.location.href = '/static/new_article.html' })
 
+      // 导航栏点击事件
+      $('.nav-item').on('click', function(){ var page = $(this).data('page'); $('.nav-item').removeClass('active'); $(this).addClass('active'); $('.mainContent > div').hide(); $('#' + page + 'Page').show(); if(page === 'articles'){ load(currentTag); } });
+
       var page = 1;
-      var limit = 10;
+      var limit = 2;
+      var total = 0;
       var currentTag = null;
 
       function setActiveLabel(tag){
@@ -176,9 +228,9 @@
 
         // attach handlers for view/edit buttons
         $('.viewBtn').on('click', function(e){ e.preventDefault(); var id = $(this).data('id'); $.ajax({ url: '/articles/' + id, method: 'GET', success: function(res){ $('#modalTitle').text(res.title); var meta = '作者：'+res.author+' 发布：'+(new Date(res.published_at)).toLocaleString(); if(res.tags && res.tags.length){ meta += ' • 标签：' + res.tags.join(', ') } $('#modalMeta').text(meta); $('#modalBody').text(res.body); $('#editFields').hide(); $('#modalBodyWrap').show(); $('#modalSave').hide(); $('#modal').css('display','flex'); }, error: function(){ alert('加载失败') } }) });
-        $('.editBtn').on('click', function(e){ e.preventDefault(); if($(this).is(':disabled')) return; var id = $(this).data('id'); $.ajax({ url: '/articles/' + id, method: 'GET', success: function(res){ $('#modalTitle').text('编辑： '+res.title); $('#modalMeta').text('作者：'+res.author+' 发布：'+(new Date(res.published_at)).toLocaleString()); $('#editTitle').val(res.title); $('#editBody').val(res.body); $('#modalBodyWrap').hide(); $('#editFields').show(); $('#modalSave').show(); $('#modal').css('display','flex'); $('#modalSave').data('id', id); }, error: function(){ alert('加载失败') } }) });
+        $('.editBtn').on('click', function(e){ e.preventDefault(); if($(this).is(':disabled')) return; var id = $(this).data('id'); $.ajax({ url: '/articles/' + id, method: 'GET', success: function(articleRes){ $('#modalTitle').text('编辑： '+articleRes.title); $('#modalMeta').text('作者：'+articleRes.author+' 发布：'+(new Date(articleRes.published_at)).toLocaleString()); $('#editTitle').val(articleRes.title); $('#editBody').val(articleRes.body); $('#editTagInput').val(articleRes.tags ? articleRes.tags.join(', ') : ''); $('#modalBodyWrap').hide(); $('#editFields').show(); $('#modalSave').show(); $('#modal').css('display','flex'); $('#modalSave').data('id', id); $.ajax({ url: '/articles/labels', method: 'GET', success: function(labelsRes){ if(labelsRes.labels && labelsRes.labels.length){ var html = ''; labelsRes.labels.forEach(function(l){ var checked = (articleRes.tags && articleRes.tags.includes(l)) ? 'checked' : ''; html += '<label style="margin-right:8px"><input type="checkbox" value="'+l+'" '+checked+'> '+l+'</label>'; }); $('#editExistingTags').html(html) } } }) }, error: function(){ alert('加载失败') } }) });
         $('#modalCancel').on('click', function(){ $('#modal').hide(); $('#editFields').hide(); $('#modalSave').hide(); });
-        $('#modalSave').on('click', function(){ var id = $(this).data('id'); var title = $('#editTitle').val().trim(); var body = $('#editBody').val().trim(); if(!title || !body){ alert('标题和正文不能为空'); return } var token = getToken(); $.ajax({ url: '/articles/'+id, method: 'PUT', contentType: 'application/json', data: JSON.stringify({title: title, body: body}), beforeSend: function(xhr){ if(token) xhr.setRequestHeader('Authorization','Bearer '+token) }, success: function(){ $('#modal').hide(); load(currentTag); }, error: function(xhr){ alert('更新失败: ' + (xhr.responseJSON && xhr.responseJSON.error || xhr.responseText || '')) } }) });
+        $('#modalSave').on('click', function(){ var id = $(this).data('id'); var title = $('#editTitle').val().trim(); var body = $('#editBody').val().trim(); if(!title || !body){ alert('标题和正文不能为空'); return } var typed = $('#editTagInput').val().trim(); var tags = []; if(typed){ tags = tags.concat(typed.split(',').map(function(s){ return s.trim() }).filter(Boolean)); } $('#editExistingTags input[type=checkbox]:checked').each(function(){ var tag = $(this).val(); if(!tags.includes(tag)){ tags.push(tag); } }); var token = getToken(); if(!token){ alert('登录已过期，请重新登录'); return } var articleData = {title: title, body: body, tags: tags}; console.log('保存文章数据:', articleData); $.ajax({ url: '/articles/'+id, method: 'PUT', contentType: 'application/json', data: JSON.stringify(articleData), beforeSend: function(xhr){ if(token) xhr.setRequestHeader('Authorization','Bearer '+token) }, success: function(){ console.log('保存成功，重新加载文章列表'); $('#modal').hide(); alert('保存成功'); load(currentTag); }, error: function(xhr){ console.error('保存失败:', xhr); var errorMsg = '更新失败'; if(xhr.responseJSON && xhr.responseJSON.error){ errorMsg = xhr.responseJSON.error; } else if(xhr.responseText){ errorMsg = xhr.responseText; } alert(errorMsg); } }) });
       }
 
       function renderLabels(labels){
@@ -204,6 +256,44 @@
         });
       }
 
+      function renderPagination(){
+        var totalPages = Math.ceil(total / limit);
+        var paginationHtml = '';
+        
+        // 首页按钮
+        paginationHtml += '<button class="page-btn" data-page="1" ' + (page === 1 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : '') + '>首页</button>';
+        
+        // 页码按钮
+        if(totalPages <= 5){
+          // 显示所有页码
+          for(var i = 1; i <= totalPages; i++){
+            paginationHtml += '<button class="page-btn" data-page="' + i + '" ' + (page === i ? 'style="background:#1976d2;color:#fff"' : '') + '>' + i + '</button>';
+          }
+        } else {
+          // 只显示当前页、首页、最后一页
+          paginationHtml += '<button class="page-btn" data-page="1" ' + (page === 1 ? 'style="background:#1976d2;color:#fff"' : '') + '>1</button>';
+          if(page > 2){
+            paginationHtml += '<span>...</span>';
+          }
+          if(page > 1 && page < totalPages){
+            paginationHtml += '<button class="page-btn" data-page="' + page + '" style="background:#1976d2;color:#fff">' + page + '</button>';
+          }
+          if(page < totalPages - 1){
+            paginationHtml += '<span>...</span>';
+          }
+          paginationHtml += '<button class="page-btn" data-page="' + totalPages + '" ' + (page === totalPages ? 'style="background:#1976d2;color:#fff"' : '') + '>' + totalPages + '</button>';
+        }
+        
+        // 末页按钮
+        paginationHtml += '<button class="page-btn" data-page="' + totalPages + '" ' + (page === totalPages ? 'disabled style="opacity:0.5;cursor:not-allowed"' : '') + '>末页</button>';
+        
+        // 更新分页控件
+        $('#paginationControls').html(paginationHtml);
+        
+        // 绑定页码点击事件
+        $('.page-btn').on('click', function(){ if(!$(this).is(':disabled')){ page = parseInt($(this).data('page')); load(currentTag); } });
+      }
+
       function load(tag){
         currentTag = tag || null;
         setActiveLabel(currentTag);
@@ -211,13 +301,37 @@
         var url = '/articles?page='+page+'&limit='+limit;
         if(currentTag) url += '&tag=' + encodeURIComponent(currentTag);
         console.log('加载文章', {url: url, page: page, tag: currentTag});
-        $.ajax({ url: url, method: 'GET', success: function(res){ console.log('articles response', res);
-            if(!res || !res.articles){ $('#articles').html('<p>无返回文章数据</p>'); return }
+        $.ajax({ 
+          url: url, 
+          method: 'GET', 
+          success: function(res){ 
+            console.log('articles response', res);
+            if(!res || !res.articles){
+              $('#articles').html('<p>无返回文章数据</p>');
+              return;
+            }
             renderArticles(res.articles || []);
+            total = res.total || 0;
             $('#pageNum').text(page);
-            $('#prev').prop('disabled', page<=1);
-            $('#next').prop('disabled', (res.articles||[]).length < limit);
-          }, error: function(xhr){ var t = xhr && xhr.responseText ? xhr.responseText : ''; $('#articles').html('<p>加载失败: '+(t||'网络错误')+'</p>'); console.error('articles load failed', xhr); } })
+            var totalPages = Math.ceil(total / limit);
+            if(page <= 1) {
+              $('#prev').hide();
+            } else {
+              $('#prev').show().prop('disabled', false);
+            }
+            if(page >= totalPages || (res.articles||[]).length < limit) {
+              $('#next').hide();
+            } else {
+              $('#next').show().prop('disabled', false);
+            }
+            renderPagination();
+          }, 
+          error: function(xhr){
+            var t = xhr && xhr.responseText ? xhr.responseText : '';
+            $('#articles').html('<p>加载失败: '+(t||'网络错误')+'</p>');
+            console.error('articles load failed', xhr);
+          }
+        });
       }
 
       $('#prev').on('click', function(){ if(page>1){ page--; load(currentTag); } });
@@ -226,8 +340,21 @@
       $('#clearFilter').on('click', function(){ page = 1; setActiveLabel(null); load(null); $('#pageNum').text(page); $('#pageInfo').text('第 '+page+' 页'); });
 
       // fetch labels initially
-      $.ajax({ url: '/articles/labels', method: 'GET', success: function(res){ console.log('labels response', res); renderLabels(res.labels || []); }, error: function(xhr){ $('#labelsLoading').text('无法加载标签'); console.error('labels load failed', xhr); } });
+      $.ajax({ 
+        url: '/articles/labels', 
+        method: 'GET', 
+        success: function(res){ 
+          console.log('labels response', res); 
+          renderLabels(res.labels || []); 
+        }, 
+        error: function(xhr){ 
+          $('#labelsLoading').text('无法加载标签'); 
+          console.error('labels load failed', xhr); 
+        } 
+      });
 
+      // 初始加载文章列表
+      console.log('初始加载文章列表');
       load();
     })
   </script>

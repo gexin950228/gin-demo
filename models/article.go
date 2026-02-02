@@ -143,8 +143,8 @@ func ListArticles(offset, limit int, tag string) ([]Article, error) {
 	return as, nil
 }
 
-// UpdateArticle updates title and body if author matches
-func UpdateArticle(id uint, title, body, username string) error {
+// UpdateArticle updates title, body, and tags if author matches
+func UpdateArticle(id uint, title, body, username string, tags []string) error {
 	if DB == nil {
 		return gorm.ErrInvalidDB
 	}
@@ -160,5 +160,42 @@ func UpdateArticle(id uint, title, body, username string) error {
 	if err := DB.Save(&a).Error; err != nil {
 		return err
 	}
+
+	// update tags/labels
+	var labelObjs []Label
+	for _, t := range tags {
+		name := strings.TrimSpace(t)
+		if name == "" {
+			continue
+		}
+		var l Label
+		if err := DB.Where("name = ?", name).First(&l).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				l = Label{Name: name}
+				if err := DB.Create(&l).Error; err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+		labelObjs = append(labelObjs, l)
+	}
+
+	// replace tags association
+	if err := DB.Model(&a).Association("Tags").Replace(labelObjs); err != nil {
+		return err
+	}
+
+	// update cached string
+	var names []string
+	for _, l := range labelObjs {
+		names = append(names, l.Name)
+	}
+	a.TagsCached = strings.Join(names, ",")
+	if err := DB.Save(&a).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
