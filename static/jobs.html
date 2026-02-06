@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        select, button { margin: 10px 0; padding: 8px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { padding: 5px 10px; margin: 2px; cursor: pointer; }
+        .yaml-btn { background-color: #4CAF50; color: white; }
+        .yaml-btn:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>Jobs</h1>
+    <div>
+        <label for="namespace">选择命名空间:</label>
+        <select id="namespace"></select>
+        <button onclick="loadJobs()">加载</button>
+    </div>
+
+    <div id="jobs"></div>
+
+    <script>
+        let namespaces = [];
+        let currentNamespace = '';
+
+        // Load namespaces on page load
+        window.onload = function() {
+            fetch('/api/k8s/namespaces')
+                .then(response => response.json())
+                .then(data => {
+                    namespaces = data.namespaces;
+                    const select = document.getElementById('namespace');
+                    select.innerHTML = '<option value="">请选择命名空间</option>';
+                    data.namespaces.forEach(ns => {
+                        const option = document.createElement('option');
+                        option.value = ns;
+                        option.textContent = ns;
+                        select.appendChild(option);
+                    });
+                    // Auto load if a namespace is selected (e.g., from URL or default)
+                    if (select.value) {
+                        loadJobs();
+                    }
+                    // Set onchange to auto load
+                    select.onchange = function() {
+                        loadJobs();
+                    };
+                })
+                .catch(error => console.error('Error loading namespaces:', error));
+        };
+
+        function loadJobs() {
+            const ns = document.getElementById('namespace').value;
+            if (!ns) {
+                alert('请选择命名空间');
+                return;
+            }
+
+            fetch(`/api/k8s/jobs?ns=${ns}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayJobs(data.jobs);
+                })
+                .catch(error => console.error('Error loading jobs:', error));
+        }
+
+        function displayJobs(jobs) {
+            const container = document.getElementById('jobs');
+            container.innerHTML = '';
+
+            if (!jobs || jobs.length === 0) {
+                container.innerHTML = '<p>没有找到 Jobs</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>名称</th><th>命名空间</th><th>并行度</th><th>完成数量</th><th>失败数量</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+            jobs.forEach(job => {
+                const parallelism = job.spec ? job.spec.parallelism || 0 : 0;
+                const succeeded = job.status ? job.status.succeeded || 0 : 0;
+                const failed = job.status ? job.status.failed || 0 : 0;
+                html += `<tr>
+                    <td>${job.metadata.name}</td>
+                    <td>${job.metadata.namespace}</td>
+                    <td>${parallelism}</td>
+                    <td>${succeeded}</td>
+                    <td>${failed}</td>
+                    <td>${new Date(job.metadata.creationTimestamp).toLocaleString()}</td>
+                    <td><button class="btn yaml-btn" onclick="viewYAML('${job.metadata.name}', 'jobs')">YAML</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function viewYAML(name, type) {
+            currentNamespace = document.getElementById('namespace').value;
+            window.open(`yaml.html?name=${name}&namespace=${currentNamespace}&type=${type}`, '_blank');
+        }
+    </script>
+</body>
+</html>

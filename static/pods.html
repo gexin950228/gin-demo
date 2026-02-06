@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pods详情</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1 id="title">Pods详情</h1>
+
+    <div id="pods"></div>
+
+    <script>
+        // Get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        const resourceType = getUrlParameter('type');
+        const namespace = getUrlParameter('ns');
+        const name = getUrlParameter('name');
+
+        document.getElementById('title').textContent = `${name} 的 Pods`;
+
+        // Load pods
+        if (resourceType && namespace && name) {
+            const url = `/api/k8s/${resourceType}s/pods?ns=${namespace}&name=${name}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    displayPods(data.pods);
+                })
+                .catch(error => console.error('Error loading pods:', error));
+        } else {
+            document.getElementById('pods').innerHTML = '<p>参数错误</p>';
+        }
+
+        function displayPods(pods) {
+            const container = document.getElementById('pods');
+            container.innerHTML = '';
+
+            if (!pods || pods.length === 0) {
+                container.innerHTML = '<p>没有找到 Pods</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Pod名称</th><th>状态</th><th>节点</th><th>IP</th><th>创建时间</th></tr></thead><tbody>';
+            pods.forEach(pod => {
+                const status = pod.status ? pod.status.phase : 'Unknown';
+                const node = pod.spec ? pod.spec.nodeName : '';
+                const ip = pod.status ? pod.status.podIP : '';
+                html += `<tr>
+                    <td>${pod.metadata.name}</td>
+                    <td>${status}</td>
+                    <td>${node}</td>
+                    <td>${ip}</td>
+                    <td>${new Date(pod.metadata.creationTimestamp).toLocaleString()}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

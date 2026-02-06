@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes 资源查询</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        select, button { margin: 10px 0; padding: 8px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .resource-section { margin-bottom: 40px; }
+        .pod-details { margin-left: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Kubernetes 集群资源查询</h1>
+    <div>
+        <label for="namespace">选择命名空间:</label>
+        <select id="namespace"></select>
+        <button onclick="loadResources()">查询资源</button>
+    </div>
+
+    <div id="resources"></div>
+
+    <script>
+        let namespaces = [];
+
+        // Load namespaces on page load
+        window.onload = function() {
+            fetch('/api/k8s/namespaces')
+                .then(response => response.json())
+                .then(data => {
+                    namespaces = data.namespaces;
+                    const select = document.getElementById('namespace');
+                    select.innerHTML = '<option value="">请选择命名空间</option>';
+                    data.namespaces.forEach(ns => {
+                        const option = document.createElement('option');
+                        option.value = ns;
+                        option.textContent = ns;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading namespaces:', error));
+        };
+
+        function loadResources() {
+            const ns = document.getElementById('namespace').value;
+            if (!ns) {
+                alert('请选择命名空间');
+                return;
+            }
+
+            fetch(`/api/k8s/resources?ns=${ns}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayResources(data);
+                })
+                .catch(error => console.error('Error loading resources:', error));
+        }
+
+        function displayResources(data) {
+            const container = document.getElementById('resources');
+            container.innerHTML = '';
+
+            // Deployments
+            if (data.deployments && data.deployments.length > 0) {
+                container.innerHTML += '<div class="resource-section"><h2>Deployments</h2>' + createTable(data.deployments, 'deployment') + '</div>';
+            }
+
+            // DaemonSets
+            if (data.daemonsets && data.daemonsets.length > 0) {
+                container.innerHTML += '<div class="resource-section"><h2>DaemonSets</h2>' + createTable(data.daemonsets, 'daemonset') + '</div>';
+            }
+
+            // Jobs
+            if (data.jobs && data.jobs.length > 0) {
+                container.innerHTML += '<div class="resource-section"><h2>Jobs</h2>' + createTable(data.jobs, 'job') + '</div>';
+            }
+
+            // CronJobs
+            if (data.cronjobs && data.cronjobs.length > 0) {
+                container.innerHTML += '<div class="resource-section"><h2>CronJobs</h2>' + createTable(data.cronjobs, 'cronjob') + '</div>';
+            }
+
+            // Pods
+            if (data.pods && data.pods.length > 0) {
+                container.innerHTML += '<div class="resource-section"><h2>Pods</h2>' + createPodTable(data.pods) + '</div>';
+            }
+        }
+
+        function createTable(items, type) {
+            let html = '<table><thead><tr><th>名称</th><th>命名空间</th><th>副本数</th><th>可用副本</th><th>创建时间</th></tr></thead><tbody>';
+            items.forEach(item => {
+                const replicas = item.spec ? item.spec.replicas || 0 : 0;
+                const available = item.status ? item.status.availableReplicas || 0 : 0;
+                html += `<tr>
+                    <td>${item.metadata.name}</td>
+                    <td>${item.metadata.namespace}</td>
+                    <td>${replicas}</td>
+                    <td>${available}</td>
+                    <td>${new Date(item.metadata.creationTimestamp).toLocaleString()}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function createPodTable(pods) {
+            let html = '<table><thead><tr><th>Pod名称</th><th>状态</th><th>节点</th><th>IP</th><th>创建时间</th></tr></thead><tbody>';
+            pods.forEach(pod => {
+                const status = pod.status ? pod.status.phase : 'Unknown';
+                const node = pod.spec ? pod.spec.nodeName : '';
+                const ip = pod.status ? pod.status.podIP : '';
+                html += `<tr>
+                    <td>${pod.metadata.name}</td>
+                    <td>${status}</td>
+                    <td>${node}</td>
+                    <td>${ip}</td>
+                    <td>${new Date(pod.metadata.creationTimestamp).toLocaleString()}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+    </script>
+</body>
+</html>

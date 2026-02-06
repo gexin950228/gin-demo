@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	articleController "gin-demo/controllers/articles"
+	k8sCtrl "gin-demo/controllers/kubernetes"
 	userCtrl "gin-demo/controllers/users"
 )
 
@@ -19,4 +20,8 @@ func Register(r *gin.Engine) {
 	articleCtrl := r.Group("/articles")
 	// Register article handlers (create/delete require auth inside)
 	articleController.RegisterRoutes(articleCtrl)
+
+	// kubernetes routes
+	k8s := r.Group("/api/k8s")
+	k8sCtrl.RegisterRoutes(k8s)
 }

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StatefulSets</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        select, button { margin: 10px 0; padding: 8px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { padding: 5px 10px; margin: 2px; cursor: pointer; }
+        .yaml-btn { background-color: #4CAF50; color: white; }
+        .yaml-btn:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>StatefulSets</h1>
+    <div>
+        <label for="namespace">选择命名空间:</label>
+        <select id="namespace"></select>
+        <button onclick="loadStatefulSets()">加载</button>
+    </div>
+
+    <div id="statefulsets"></div>
+
+    <script>
+        let namespaces = [];
+        let currentNamespace = '';
+
+        // Load namespaces on page load
+        window.onload = function() {
+            fetch('/api/k8s/namespaces')
+                .then(response => response.json())
+                .then(data => {
+                    namespaces = data.namespaces;
+                    const select = document.getElementById('namespace');
+                    select.innerHTML = '<option value="">请选择命名空间</option>';
+                    data.namespaces.forEach(ns => {
+                        const option = document.createElement('option');
+                        option.value = ns;
+                        option.textContent = ns;
+                        select.appendChild(option);
+                    });
+                    // Auto load if a namespace is selected (e.g., from URL or default)
+                    if (select.value) {
+                        loadStatefulSets();
+                    }
+                    // Set onchange to auto load
+                    select.onchange = function() {
+                        loadStatefulSets();
+                    };
+                })
+                .catch(error => console.error('Error loading namespaces:', error));
+        };
+
+        function loadStatefulSets() {
+            const ns = document.getElementById('namespace').value;
+            if (!ns) {
+                alert('请选择命名空间');
+                return;
+            }
+
+            fetch(`/api/k8s/statefulsets?ns=${ns}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayStatefulSets(data.statefulsets);
+                })
+                .catch(error => console.error('Error loading statefulsets:', error));
+        }
+
+        function displayStatefulSets(statefulsets) {
+            const container = document.getElementById('statefulsets');
+            container.innerHTML = '';
+
+            if (!statefulsets || statefulsets.length === 0) {
+                container.innerHTML = '<p>没有找到 StatefulSets</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>名称</th><th>命名空间</th><th>副本数</th><th>就绪副本</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+            statefulsets.forEach(sts => {
+                const replicas = sts.spec ? sts.spec.replicas || 0 : 0;
+                const ready = sts.status ? sts.status.readyReplicas || 0 : 0;
+                html += `<tr>
+                    <td>${sts.metadata.name}</td>
+                    <td>${sts.metadata.namespace}</td>
+                    <td>${replicas}</td>
+                    <td>${ready}</td>
+                    <td>${new Date(sts.metadata.creationTimestamp).toLocaleString()}</td>
+                    <td><button onclick="showPods('${sts.metadata.name}', '${sts.metadata.namespace}', 'statefulset')">查看 Pods</button>
+                        <button class="btn yaml-btn" onclick="viewYAML('${sts.metadata.name}', 'statefulsets')">YAML</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function showPods(name, namespace, type) {
+            window.open(`pods.html?type=${type}&ns=${namespace}&name=${name}`, '_blank');
+        }
+
+        function viewYAML(name, type) {
+            currentNamespace = document.getElementById('namespace').value;
+            window.open(`yaml.html?name=${name}&namespace=${currentNamespace}&type=${type}`, '_blank');
+        }
+    </script>
+</body>
+</html>

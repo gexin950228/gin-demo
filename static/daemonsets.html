@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DaemonSets</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        select, button { margin: 10px 0; padding: 8px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { padding: 5px 10px; margin: 2px; cursor: pointer; }
+        .yaml-btn { background-color: #4CAF50; color: white; }
+        .yaml-btn:hover { background-color: #45a049; }
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 800px; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover, .close:focus { color: black; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>DaemonSets</h1>
+    <div>
+        <label for="namespace">选择命名空间:</label>
+        <select id="namespace"></select>
+        <button onclick="loadDaemonSets()">加载</button>
+    </div>
+
+    <div id="daemonsets"></div>
+
+    <!-- Modal for Pods -->
+    <div id="podsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Pods详情</h2>
+            <div id="modalPods"></div>
+        </div>
+    </div>
+
+    <script>
+        let namespaces = [];
+        let currentNamespace = '';
+
+        // Load namespaces on page load
+        window.onload = function() {
+            fetch('/api/k8s/namespaces')
+                .then(response => response.json())
+                .then(data => {
+                    namespaces = data.namespaces;
+                    const select = document.getElementById('namespace');
+                    select.innerHTML = '<option value="">请选择命名空间</option>';
+                    data.namespaces.forEach(ns => {
+                        const option = document.createElement('option');
+                        option.value = ns;
+                        option.textContent = ns;
+                        select.appendChild(option);
+                    });
+                    // Auto load if a namespace is selected (e.g., from URL or default)
+                    if (select.value) {
+                        loadDaemonSets();
+                    }
+                    // Set onchange to auto load
+                    select.onchange = function() {
+                        loadDaemonSets();
+                    };
+                })
+                .catch(error => console.error('Error loading namespaces:', error));
+        };
+
+        function loadDaemonSets() {
+            const ns = document.getElementById('namespace').value;
+            if (!ns) {
+                alert('请选择命名空间');
+                return;
+            }
+
+            fetch(`/api/k8s/daemonsets?ns=${ns}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayDaemonSets(data.daemonsets);
+                })
+                .catch(error => console.error('Error loading daemonsets:', error));
+        }
+
+        function displayDaemonSets(daemonsets) {
+            const container = document.getElementById('daemonsets');
+            container.innerHTML = '';
+
+            if (!daemonsets || daemonsets.length === 0) {
+                container.innerHTML = '<p>没有找到 DaemonSets</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>名称</th><th>命名空间</th><th>期望数量</th><th>当前数量</th><th>可用数量</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+            daemonsets.forEach(ds => {
+                const desired = ds.status ? ds.status.desiredNumberScheduled || 0 : 0;
+                const current = ds.status ? ds.status.currentNumberScheduled || 0 : 0;
+                const available = ds.status ? ds.status.numberAvailable || 0 : 0;
+                html += `<tr>
+                    <td>${ds.metadata.name}</td>
+                    <td>${ds.metadata.namespace}</td>
+                    <td>${desired}</td>
+                    <td>${current}</td>
+                    <td>${available}</td>
+                    <td>${new Date(ds.metadata.creationTimestamp).toLocaleString()}</td>
+                    <td><button onclick="showPods('${ds.metadata.name}', '${ds.metadata.namespace}', 'daemonset')">查看 Pods</button>
+                        <button class="btn yaml-btn" onclick="viewYAML('${ds.metadata.name}', 'daemonsets')">YAML</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function showPods(name, namespace, type) {
+            document.getElementById('modalTitle').textContent = `${name} 的 Pods`;
+            document.getElementById('modalPods').innerHTML = '<p>加载中...</p>';
+            document.getElementById('podsModal').style.display = 'block';
+
+            const url = `/api/k8s/${type}s/pods?ns=${namespace}&name=${name}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    displayPodsInModal(data.pods);
+                })
+                .catch(error => {
+                    document.getElementById('modalPods').innerHTML = '<p>加载失败</p>';
+                    console.error('Error loading pods:', error);
+                });
+        }
+
+        function viewYAML(name, type) {
+            currentNamespace = document.getElementById('namespace').value;
+            window.open(`yaml.html?name=${name}&namespace=${currentNamespace}&type=${type}`, '_blank');
+        }
+
+        function displayPodsInModal(pods) {
+            const container = document.getElementById('modalPods');
+            if (!pods || pods.length === 0) {
+                container.innerHTML = '<p>没有找到 Pods</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Pod名称</th><th>状态</th><th>节点</th><th>IP</th><th>创建时间</th></tr></thead><tbody>';
+            pods.forEach(pod => {
+                const status = pod.status ? pod.status.phase : 'Unknown';
+                const node = pod.spec ? pod.spec.nodeName : '';
+                const ip = pod.status ? pod.status.podIP : '';
+                html += `<tr>
+                    <td>${pod.metadata.name}</td>
+                    <td>${status}</td>
+                    <td>${node}</td>
+                    <td>${ip}</td>
+                    <td>${new Date(pod.metadata.creationTimestamp).toLocaleString()}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function closeModal() {
+            document.getElementById('podsModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

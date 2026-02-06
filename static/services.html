@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { padding: 5px 10px; margin: 2px; cursor: pointer; }
+        .yaml-btn { background-color: #4CAF50; color: white; }
+        .yaml-btn:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>Services</h1>
+    <label for="namespaceSelect">Namespace:</label>
+    <select id="namespaceSelect">
+        <option value="">All Namespaces</option>
+    </select>
+    <button onclick="loadServices()">Load Services</button>
+
+    <table id="servicesTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Namespace</th>
+                <th>Type</th>
+                <th>Cluster IP</th>
+                <th>External IP</th>
+                <th>Ports</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src="/static/js/jquery-3.6.0.min.js"></script>
+    <script>
+        let currentNamespace = '';
+
+        $(document).ready(function() {
+            loadNamespaces();
+        });
+
+        function loadNamespaces() {
+            $.get('/api/k8s/namespaces', function(data) {
+                const select = $('#namespaceSelect');
+                data.forEach(ns => {
+                    select.append(`<option value="${ns.name}">${ns.name}</option>`);
+                });
+            });
+        }
+
+        function loadServices() {
+            currentNamespace = $('#namespaceSelect').val();
+            $.get(`/api/k8s/services?ns=${currentNamespace}`, function(data) {
+                const tbody = $('#servicesTable tbody');
+                tbody.empty();
+                data.forEach(service => {
+                    const ports = service.spec.ports ? service.spec.ports.map(p => `${p.port}/${p.protocol}`).join(', ') : '';
+                    const externalIPs = service.status.loadBalancer && service.status.loadBalancer.ingress ?
+                        service.status.loadBalancer.ingress.map(i => i.ip || i.hostname).join(', ') : '';
+                    tbody.append(`
+                        <tr>
+                            <td>${service.metadata.name}</td>
+                            <td>${service.metadata.namespace}</td>
+                            <td>${service.spec.type || 'ClusterIP'}</td>
+                            <td>${service.spec.clusterIP || ''}</td>
+                            <td>${externalIPs}</td>
+                            <td>${ports}</td>
+                            <td>
+                                <button class="btn yaml-btn" onclick="viewYAML('${service.metadata.name}', 'services')">YAML</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            });
+        }
+
+        function viewYAML(name, type) {
+            const namespace = $('#namespaceSelect').val();
+            window.open(`yaml.html?name=${name}&namespace=${namespace}&type=${type}`, '_blank');
+        }
+    </script>
+</body>
+</html>
