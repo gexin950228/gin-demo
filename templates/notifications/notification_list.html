@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的消息 - Gin Demo</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <style>
+        .notification-list-wrap { max-width: 800px; margin: 0 auto; }
+        .notification-page-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .read-all-link {
+            font-size: 0.85rem;
+            color: #4a90e2;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: normal;
+        }
+        .read-all-link:hover { text-decoration: underline; }
+
+        .notification-row {
+            display: flex;
+            gap: 0.8rem;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #f1f3f5;
+            text-decoration: none;
+            color: inherit;
+            transition: background-color 0.15s;
+            align-items: flex-start;
+        }
+        .notification-row:hover { background-color: #f8f9fa; }
+        .notification-row.unread { background-color: #eaf2fb; }
+        .notification-row.unread:hover { background-color: #dde9f7; }
+
+        .noti-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4a90e2;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .noti-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .noti-body { flex: 1; min-width: 0; }
+        .noti-text {
+            font-size: 0.9rem;
+            color: #343a40;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .noti-text .actor { font-weight: 600; color: #2c3e50; }
+        .noti-text .summary { color: #6c757d; }
+        .noti-meta {
+            font-size: 0.78rem;
+            color: #adb5bd;
+            margin-top: 0.3rem;
+        }
+        .noti-article-title { color: #4a90e2; }
+
+        .noti-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #e74c3c;
+            flex-shrink: 0;
+            margin-top: 8px;
+        }
+
+        .noti-empty {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #adb5bd;
+            font-size: 0.95rem;
+        }
+        .noti-empty .empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.8rem; opacity: 0.5; }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 1.5rem;
+        }
+        .page-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .page-btn:hover:not(:disabled) { border-color: #4a90e2; color: #4a90e2; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-btn.active { background: #4a90e2; color: white; border-color: #4a90e2; }
+        .pagination-info { color: #6c757d; font-size: 0.82rem; margin: 0 0.5rem; }
+    </style>
+    <script>
+        if(localStorage.getItem('sidebar_expanded')==='true')document.write('<style>.sidebar{width:220px}</style>');
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{.url_home}}" class="navbar-brand">Gin Demo</a>
+        <div class="user-info">
+            <div class="user-dropdown">
+                <span class="user-name" onclick="toggleUserMenu()">
+                    <span class="user-avatar" id="navAvatar">
+                        {{if .avatar_url}}<img src="{{.avatar_url}}" alt="">{{else}}<span>{{slice .username 0 1}}</span>{{end}}
+                    </span>
+                    {{.username}} <span class="dropdown-arrow">&#9660;</span>
+                    <span class="approval-badge" id="approvalBadge" style="display:none;"></span>
+                </span>
+                <div class="dropdown-menu" id="userDropdownMenu">
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openAvatarModal()">
+                        &#128247; 修改头像
+                    </a>
+                    <a href="{{.url_approval_list}}" class="dropdown-item">
+                        &#9989; 我的审批
+                        <span class="badge-num" id="approvalBadgeNum"></span>
+                    </a>
+                    <a href="{{.url_logout}}" class="dropdown-item">&#128682; 退出登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像上传弹窗 -->
+    <div class="avatar-modal-mask" id="avatarModalMask" onclick="if(event.target===this)closeAvatarModal()">
+        <div class="avatar-modal">
+            <h3>修改头像</h3>
+            <div class="avatar-preview" id="avatarPreview">
+                <div class="avatar-preview-placeholder">点击下方按钮<br>选择图片</div>
+            </div>
+            <input type="file" class="avatar-file-input" id="avatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp">
+            <div class="avatar-modal-actions">
+                <button class="avatar-btn-cancel" onclick="closeAvatarModal()">取消</button>
+                <button class="avatar-btn-upload" id="avatarUploadBtn" onclick="uploadAvatar()" disabled>上传</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <button class="sidebar-toggle" id="sidebarToggle" title="展开导航" onclick="toggleSidebar()">&#9776;</button>
+        <div class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <div class="nav-header expanded" onclick="toggleSubMenu(this)">
+                        <span><span class="tab-icon">&#128196;</span> 文章管理</span>
+                        <span class="arrow">&#9654;</span>
+                    </div>
+                    <ul class="nav-sub-menu show">
+                        <li><a href="{{.url_article_create}}">新增文章</a></li>
+                        <li><a href="{{.url_article_list}}">文章列表</a></li>
+                        <li><a href="{{.url_tag_manage}}">标签管理</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item" id="msgCenterNav">
+                    <div class="nav-header expanded active" onclick="toggleSubMenu(this)">
+                        <span><span class="tab-icon">&#128276;</span> 消息中心</span>
+                        <span class="arrow">&#9654;</span>
+                    </div>
+                    <ul class="nav-sub-menu show">
+                        <li><a href="{{.url_notification_list}}" class="active">互动消息</a></li>
+                        <li><a href="{{.url_approval_list}}">审批消息</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content-area">
+            <div class="tabs-container" id="tabsContainer"></div>
+            <div class="tab-content">
+                <div class="notification-list-wrap">
+                    <h1 class="notification-page-title">
+                        我的消息
+                        {{if gt .total 0}}
+                        <a class="read-all-link" onclick="markAllRead()">全部标记已读</a>
+                        {{end}}
+                    </h1>
+
+                    {{if .notifications}}
+                    <div class="notification-list">
+                        {{range .notifications}}
+                        {{$viewUrl := printf "%s?id=%d#comment-%d" $.url_article_view .ArticleID .CommentID}}
+                        <a href="{{$viewUrl}}" class="notification-row{{if eq .IsRead 0}} unread{{end}}" data-id="{{.ID}}">
+                            <span class="noti-avatar">
+                                {{if .ActorAvatar}}<img src="{{.ActorAvatar}}" alt="">{{else}}{{slice .ActorName 0 1}}{{end}}
+                            </span>
+                            <div class="noti-body">
+                                <div class="noti-text">
+                                    <span class="actor">{{.ActorName}}</span>
+                                    {{if eq .Type 2}}回复了你的评论{{else}}评论了你的文章{{end}}
+                                    {{if .Summary}}<span class="summary">：{{.Summary}}</span>{{end}}
+                                </div>
+                                <div class="noti-meta">
+                                    <span class="noti-article-title">{{if .ArticleTitle}}{{.ArticleTitle}}{{else}}文章{{end}}</span>
+                                    · {{.CreatedAt.Format "2006-01-02 15:04"}}
+                                </div>
+                            </div>
+                            {{if eq .IsRead 0}}<span class="noti-dot"></span>{{end}}
+                        </a>
+                        {{end}}
+                    </div>
+
+                    <!-- 分页 -->
+                    {{if gt .total_pages 1}}
+                    <div class="pagination">
+                        <a class="page-btn" href="{{.url_notification_list}}?page={{sub .page 1}}" {{if le .page 1}}style="visibility:hidden;"{{end}}>&#8249; 上一页</a>
+                        {{range $p := buildPageList .page .total_pages}}
+                        <a class="page-btn{{if eq $p (printf "%d" $.page)}} active{{end}}" href="{{$.url_notification_list}}?page={{$p}}">{{$p}}</a>
+                        {{end}}
+                        <a class="page-btn" href="{{.url_notification_list}}?page={{add .page 1}}" {{if ge .page .total_pages}}style="visibility:hidden;"{{end}}>下一页 &#8250;</a>
+                        <span class="pagination-info">共 {{.total}} 条，第 {{.page}}/{{.total_pages}} 页</span>
+                    </div>
+                    {{end}}
+                    {{else}}
+                    <div class="noti-empty">
+                        <span class="empty-icon">&#128172;</span>
+                        暂无消息通知
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script>window.AVATAR_UPLOAD_URL = '{{.url_avatar_upload}}';</script>
+    <script src="/static/js/layout.js"></script>
+    <script>
+        function toggleSubMenu(header) {
+            $(header).toggleClass('expanded');
+            $(header).siblings('.nav-sub-menu').toggleClass('show');
+            $('.nav-header').not($(header)).removeClass('active');
+            if ($(header).hasClass('expanded')) { $(header).addClass('active'); }
+        }
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var btn = document.getElementById('sidebarToggle');
+            if (sb.classList.contains('sidebar-expanded')) {
+                sb.classList.remove('sidebar-expanded');
+                btn.innerHTML = '&#9776;';
+                btn.title = '展开导航';
+                btn.style.left = '0';
+                localStorage.setItem('sidebar_expanded', 'false');
+            } else {
+                sb.classList.add('sidebar-expanded');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+                localStorage.setItem('sidebar_expanded', 'true');
+            }
+        }
+        var URL_NOTI_READ = '{{.url_notification_read}}';
+
+        // 点击单条通知：用 sendBeacon 后台标记已读，浏览器原生跳转（href 已在 <a> 上）
+        $(document).on('click', '.notification-row', function(e) {
+            var id = $(this).data('id');
+            if (id && navigator.sendBeacon) {
+                var fd = new FormData();
+                fd.append('id', id);
+                navigator.sendBeacon(URL_NOTI_READ, fd);
+            }
+            // 不阻止默认行为，让 <a> 原生跳转
+        });
+
+        // 全部标记已读
+        function markAllRead() {
+            $.ajax({
+                url: URL_NOTI_READ,
+                type: 'POST',
+                data: { all: 1 },
+                success: function() {
+                    // 移除未读样式和小红点（SPA 下不刷新整页，避免丢失标签状态）
+                    $('.notification-row.unread').removeClass('unread');
+                    $('.noti-dot').remove();
+                    // 立即隐藏导航栏未读红点
+                    $('#notiBadge').hide();
+                    $('#notiNameBadge').hide();
+                },
+                error: function() {
+                    alert('操作失败，请重试');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            // 后端在渲染本页时已将全部未读标记为已读，立即隐藏导航栏红点（无需等下次轮询）
+            $('#notiBadge').hide();
+            $('#notiNameBadge').hide();
+            if (localStorage.getItem('sidebar_expanded') === 'true') {
+                document.getElementById('sidebar').classList.add('sidebar-expanded');
+                var btn = document.getElementById('sidebarToggle');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+            }
+        });
+    </script>
+</body>
+</html>

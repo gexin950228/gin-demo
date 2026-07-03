@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - Gin Demo</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <style>
+        /* 首页内容（页面特有样式） */
+        .welcome-section {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+        }
+
+        .welcome-subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .info-card:nth-child(2) {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            box-shadow: 0 4px 15px rgba(17,153,142,0.3);
+        }
+        .info-card:nth-child(3) {
+            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+            box-shadow: 0 4px 15px rgba(252,74,26,0.3);
+        }
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .info-card-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .info-card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.4rem; }
+        .info-card-desc { font-size: 0.9rem; opacity: 0.9; line-height: 1.5; }
+
+        .quick-actions {
+            margin-top: 3rem;
+            text-align: center;
+        }
+        .quick-actions h3 { color: #495057; margin-bottom: 1rem; font-size: 1.1rem; }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+        }
+        .btn-create:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(39,174,96,0.4); }
+
+        .btn-list {
+            background: transparent;
+            color: #4a90e2;
+            border: 2px solid #4a90e2;
+        }
+        .btn-list:hover { background-color: #4a90e2; color: white; }
+    </style>
+    <script>
+        // 防侧边栏 FOUC：在页面渲染前立即恢复状态
+        if(localStorage.getItem('sidebar_expanded')==='true')document.write('<style>.sidebar{width:220px}</style>');
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{.url_home}}" class="navbar-brand">Gin Demo</a>
+        <div class="user-info">
+            <div class="user-dropdown">
+                <span class="user-name" onclick="toggleUserMenu()">
+                    <span class="user-avatar" id="navAvatar">
+                        {{if .avatar_url}}<img src="{{.avatar_url}}" alt="">{{else}}<span>{{slice .username 0 1}}</span>{{end}}
+                    </span>
+                    {{.username}} <span class="dropdown-arrow">&#9660;</span>
+                    <span class="approval-badge" id="approvalBadge" style="display:none;"></span>
+                </span>
+                <div class="dropdown-menu" id="userDropdownMenu">
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openAvatarModal()">
+                        &#128247; 修改头像
+                    </a>
+                    <a href="{{.url_approval_list}}" class="dropdown-item">
+                        &#9989; 我的审批
+                        <span class="badge-num" id="approvalBadgeNum"></span>
+                    </a>
+                    <a href="{{.url_logout}}" class="dropdown-item">&#128682; 退出登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像上传弹窗 -->
+    <div class="avatar-modal-mask" id="avatarModalMask" onclick="if(event.target===this)closeAvatarModal()">
+        <div class="avatar-modal">
+            <h3>修改头像</h3>
+            <div class="avatar-preview" id="avatarPreview">
+                <div class="avatar-preview-placeholder">点击下方按钮<br>选择图片</div>
+            </div>
+            <input type="file" class="avatar-file-input" id="avatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp">
+            <div class="avatar-modal-actions">
+                <button class="avatar-btn-cancel" onclick="closeAvatarModal()">取消</button>
+                <button class="avatar-btn-upload" id="avatarUploadBtn" onclick="uploadAvatar()" disabled>上传</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <button class="sidebar-toggle" id="sidebarToggle" title="展开导航" onclick="toggleSidebar()">&#9776;</button>
+        <div class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <div class="nav-header expanded active" onclick="toggleSubMenu(this)">
+                        <span><span class="tab-icon">&#128196;</span> 文章管理</span>
+                        <span class="arrow">&#9654;</span>
+                    </div>
+                    <ul class="nav-sub-menu show">
+                        <li><a href="{{.url_article_create}}">新增文章</a></li>
+                        <li><a href="{{.url_article_list}}">文章列表</a></li>
+                        {{if .is_admin}}<li><a href="{{.url_tag_manage}}">标签管理</a></li>{{end}}
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content-area">
+            <!-- 标签页栏（动态渲染） -->
+            <div class="tabs-container" id="tabsContainer"></div>
+
+            <!-- 内容区域 -->
+            <div class="tab-content">
+                <div class="welcome-section">
+                    <h1 class="welcome-title">欢迎来到 Gin Demo</h1>
+                    <p class="welcome-subtitle">一个使用 Go + Gin 框架构建的示例应用</p>
+
+                    <div class="info-cards">
+                        <div class="info-card">
+                            <div class="info-card-icon">&#128187;</div>
+                            <div class="info-card-title">Go + Gin</div>
+                            <div class="info-card-desc">高性能 Web 框架，支持中间件、路由分组、JSON验证等</div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-icon">&#128202;</div>
+                            <div class="info-card-title">MySQL + Redis</div>
+                            <div class="info-card-desc">MySQL 数据持久化 + Redis 缓存/Session/Token</div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-icon">&#128274;</div>
+                            <div class="info-card-title">安全认证</div>
+                            <div class="info-card-desc">邮箱验证码注册、Token 认证、密码强度检测</div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <h3>快速开始</h3>
+                        <div class="action-buttons">
+                            <a href="{{.url_article_create}}" class="action-btn btn-create">
+                                &#9998; 新增文章
+                            </a>
+                            <a href="{{.url_article_list}}" class="action-btn btn-list">
+                                &#128220; 文章列表
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SPA Modal 容器（用于存放动态加载页面的弹窗） -->
+    <div id="spaModalContainer"></div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script>window.AVATAR_UPLOAD_URL = '{{.url_avatar_upload}}';</script>
+    <script src="/static/js/layout.js"></script>
+    <script>
+        // ========== 公共函数 ==========
+        function toggleSubMenu(header) {
+            $(header).toggleClass('expanded');
+            $(header).siblings('.nav-sub-menu').toggleClass('show');
+            $('.nav-header').not($(header)).removeClass('active');
+            if ($(header).hasClass('expanded')) {
+                $(header).addClass('active');
+            }
+        }
+
+        // 注：toggleUserMenu / openAvatarModal / closeAvatarModal / uploadAvatar
+        //     以及 #avatarFileInput 的 change 事件已抽到 /static/js/layout.js
+        // 审批/通知红点数量由 WebSocket 推送，统一在 /static/js/layout.js 中处理
+
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var btn = document.getElementById('sidebarToggle');
+            if (sb.classList.contains('sidebar-expanded')) {
+                sb.classList.remove('sidebar-expanded');
+                btn.innerHTML = '&#9776;';
+                btn.title = '展开导航';
+                btn.style.left = '0';
+                localStorage.setItem('sidebar_expanded', 'false');
+            } else {
+                sb.classList.add('sidebar-expanded');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+                localStorage.setItem('sidebar_expanded', 'true');
+            }
+        }
+
+        // ========== SPA 单页应用导航系统 ==========
+        // 当前激活的 tab URL（动态更新，地址栏始终为 /home）
+        var currentTabUrl = '{{.url_home}}';
+
+        var TAB_REGISTRY = {};
+        TAB_REGISTRY['{{.url_home}}']           = { title: '首页',     icon: '&#127968;', closable: false };
+        TAB_REGISTRY['{{.url_article_create}}'] = { title: '新增文章', icon: '&#9998;',   closable: true };
+        TAB_REGISTRY['{{.url_article_list}}']   = { title: '文章列表', icon: '&#128220;',  closable: true };
+        {{if .is_admin}}TAB_REGISTRY['{{.url_tag_manage}}']     = { title: '标签管理', icon: '&#128295;',  closable: true };{{end}}
+        TAB_REGISTRY['{{.url_approval_list}}']    = { title: '审批消息', icon: '&#9989;',    closable: true };
+        TAB_REGISTRY['{{.url_notification_list}}'] = { title: '互动消息', icon: '&#128276;', closable: true };
+
+        function getOpenTabs() {
+            try { return JSON.parse(localStorage.getItem('open_tabs') || '[]'); } catch(e) { return []; }
+        }
+        function saveOpenTabs(tabs) {
+            localStorage.setItem('open_tabs', JSON.stringify(tabs));
+        }
+
+        // 渲染标签页栏（根据 currentTabUrl 高亮）
+        function renderTabs() {
+            var $container = $('#tabsContainer');
+            $container.empty();
+            var tabs = getOpenTabs();
+
+            // 过滤掉无权限的 tab（如非管理员残留的标签管理）
+            // 只对静态导航 URL 校验（动态文章 view/edit URL 不在 TAB_REGISTRY 中，需放行）
+            var tagManageUrl = '{{.url_tag_manage}}';
+            tabs = tabs.filter(function(t) {
+                if (t.url === tagManageUrl && !TAB_REGISTRY[tagManageUrl]) {
+                    return false; // 无权限，移除
+                }
+                return true;
+            });
+            saveOpenTabs(tabs);
+
+            // 确保首页 tab 始终存在
+            var hasHome = tabs.some(function(t) { return t.url === '{{.url_home}}'; });
+            if (!hasHome) {
+                tabs.unshift({ url: '{{.url_home}}', title: '首页', icon: '&#127968;', closable: false });
+            }
+            saveOpenTabs(tabs);
+
+            for (var i = 0; i < tabs.length; i++) {
+                var tab = tabs[i];
+                var isActive = (tab.url === currentTabUrl) ? ' active' : '';
+                var closeHtml = tab.closable ? '<span class="tab-close" onclick="closeTab(event, this)">&times;</span>' : '';
+                $container.append(
+                    '<a href="' + tab.url + '" class="tab-item' + isActive + '" onclick="switchTab(event, this)">' +
+                    '<span class="tab-icon">' + tab.icon + '</span>' +
+                    '<span>' + tab.title + '</span>' +
+                    closeHtml + '</a>'
+                );
+            }
+        }
+
+        // 切换标签页（点击标签栏）
+        function switchTab(event, element) {
+            event.preventDefault();
+            var url = $(element).attr('href');
+            navigateTo(url);
+        }
+
+        // 注册标签到 localStorage（不存在则新增；已存在但 TAB_REGISTRY 有更准确信息则同步 title/icon）
+        function registerTab(url) {
+            var tabs = getOpenTabs();
+            var info = TAB_REGISTRY[url];
+            var idx = -1;
+            for (var i = 0; i < tabs.length; i++) {
+                if (tabs[i].url === url) { idx = i; break; }
+            }
+            if (idx === -1) {
+                // 不存在，新增
+                if (info) {
+                    tabs.push({ url: url, title: info.title, icon: info.icon, closable: info.closable });
+                } else {
+                    // 未知 URL（如文章详情、编辑），动态推断标题和图标
+                    var title = '页面', icon = '&#128196;';
+                    if (url.indexOf('/view') >= 0) { title = '文章详情'; icon = '&#128065;'; }
+                    else if (url.indexOf('/edit') >= 0) { title = '编辑文章'; icon = '&#9998;'; }
+                    tabs.push({ url: url, title: title, icon: icon, closable: true });
+                }
+            } else if (info) {
+                // 已存在：用 TAB_REGISTRY 的准确信息修正旧的“页面”占位标题
+                tabs[idx].title = info.title;
+                tabs[idx].icon = info.icon;
+                tabs[idx].closable = info.closable;
+            }
+            saveOpenTabs(tabs);
+        }
+
+        // 导航到指定 URL（AJAX 加载内容，不改变地址栏）
+        function navigateTo(url) {
+            registerTab(url);
+            loadPageContent(url);
+        }
+
+        // 关闭标签页
+        function closeTab(event, element) {
+            event.preventDefault();
+            event.stopPropagation();
+            var $tab = $(element).closest('.tab-item');
+            var closeUrl = $tab.attr('href');
+            var isActive = $tab.hasClass('active');
+
+            var tabs = getOpenTabs();
+            tabs = tabs.filter(function(t) { return t.url !== closeUrl; });
+            saveOpenTabs(tabs);
+
+            if (isActive) {
+                // 关闭当前页：切换到剩余第一个标签
+                if (tabs.length > 0) {
+                    navigateTo(tabs[0].url);
+                } else {
+                    navigateTo('{{.url_home}}');
+                }
+            } else {
+                renderTabs();
+            }
+        }
+
+        // 简易 hash 函数（用于 style 去重）
+        function hashCode(str) {
+            var hash = 0;
+            for (var i = 0; i < str.length; i++) {
+                var ch = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + ch;
+                hash = hash & hash;
+            }
+            return hash;
+        }
+
+        // 处理 AJAX 返回的页面 HTML：提取内容、style、script 并注入
+        function processResponseHtml(html, url) {
+            // 解析 url 中的 hash，供目标页脚本感知（SPA 下地址栏不变，location.hash 始终为空）
+            var hashIdx = url.indexOf('#');
+            window.SPA_TARGET_HASH = (hashIdx >= 0) ? url.substring(hashIdx) : '';
+
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+
+            // 1. 提取页面特有的 style（去重注入）
+            var styles = doc.querySelectorAll('head style');
+            for (var i = 0; i < styles.length; i++) {
+                var css = styles[i].textContent;
+                var styleId = 'spa_style_' + hashCode(css);
+                if (!document.getElementById(styleId)) {
+                    var styleEl = document.createElement('style');
+                    styleEl.id = styleId;
+                    styleEl.textContent = css;
+                    document.head.appendChild(styleEl);
+                }
+            }
+
+            // 2. 提取 tab-content 内容并注入
+            var newContent = doc.querySelector('.tab-content');
+            if (newContent) {
+                $('.tab-content').html(newContent.innerHTML);
+            }
+
+            // 3. 提取 tab-content 外的 modal、toast 等辅助元素
+            $('#spaModalContainer').empty();
+            var extraElements = doc.querySelectorAll('body > .modal-overlay, body > div[id*="odal"], body > #toast, body > .toast-msg');
+            for (var i = 0; i < extraElements.length; i++) {
+                $('#spaModalContainer').append(extraElements[i].outerHTML);
+            }
+
+            // 4. 保存当前 SPA 函数引用（加载的脚本可能覆盖它们）
+            var spaFunctions = {
+                toggleSubMenu: window.toggleSubMenu,
+                toggleSidebar: window.toggleSidebar,
+                getOpenTabs: window.getOpenTabs,
+                saveOpenTabs: window.saveOpenTabs,
+                registerTab: window.registerTab,
+                renderTabs: window.renderTabs,
+                switchTab: window.switchTab,
+                navigateTo: window.navigateTo,
+                closeTab: window.closeTab,
+                loadPageContent: window.loadPageContent,
+                processResponseHtml: window.processResponseHtml,
+                updateNavHighlight: window.updateNavHighlight,
+                bindSpaEvents: window.bindSpaEvents,
+                hashCode: window.hashCode,
+                toggleUserMenu: window.toggleUserMenu,
+                showApprovalPopup: window.showApprovalPopup
+            };
+
+            // 5. 提取并执行内联 script（跳过外部 script 如 jquery）
+            //    首页的 script 包含 SPA 逻辑，跳过避免重复绑定事件委托
+            var isHome = (url === '{{.url_home}}');
+            if (!isHome) {
+                // 让 $(document).ready 回调同步执行（避免异步回调覆盖 SPA 状态）
+                var originalReady = $.fn.ready;
+                $.fn.ready = function(fn) {
+                    try { fn.call(document, $); } catch(e) { console.error('Ready callback error:', e); }
+                    return this;
+                };
+
+                // 只执行 body 中的 script（跳过 head 中的 document.write 等初始化脚本，
+                // 它们在 AJAX 加载后执行会清空整个页面文档导致白页）
+                var scripts = doc.body.querySelectorAll('script');
+                for (var i = 0; i < scripts.length; i++) {
+                    var src = scripts[i].src;
+                    var code = scripts[i].textContent;
+                    if (src) continue; // 跳过外部 script
+                    if (code && code.trim()) {
+                        try {
+                            var newScript = document.createElement('script');
+                            newScript.textContent = code;
+                            document.body.appendChild(newScript);
+                            document.body.removeChild(newScript);
+                        } catch(e) {
+                            console.error('Script execution error:', e);
+                        }
+                    }
+                }
+
+                // 恢复 $.fn.ready
+                $.fn.ready = originalReady;
+            }
+
+            // 6. 恢复 SPA 函数（加载的脚本可能用 window.location.href 版本覆盖了它们）
+            for (var fnName in spaFunctions) {
+                if (spaFunctions.hasOwnProperty(fnName)) {
+                    window[fnName] = spaFunctions[fnName];
+                }
+            }
+
+            // 7. 清除侧边栏导航的直接绑定（加载的 script 可能绑定了，避免重复触发）
+            $('.nav-sub-menu a').off('click');
+
+            // 8. 重新绑定 SPA 事件委托（确保导航始终被拦截）
+            bindSpaEvents();
+
+            // 9. 更新状态
+            currentTabUrl = url;
+            updateNavHighlight(url);
+            renderTabs();
+            $('.tab-content').scrollTop(0);
+        }
+
+        // AJAX 加载页面内容
+        function loadPageContent(url) {
+            $('.tab-content').html('<div style="text-align:center;padding:3rem;color:#999;">加载中...</div>');
+            $('.nav-sub-menu a').off('click');
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'html',
+                success: function(html) {
+                    processResponseHtml(html, url);
+                },
+                error: function() {
+                    $('.tab-content').html('<div style="text-align:center;padding:3rem;color:#e74c3c;">加载失败，请重试</div>');
+                }
+            });
+        }
+
+        // 更新侧边栏导航高亮
+        function updateNavHighlight(url) {
+            $('.nav-sub-menu a').removeClass('active');
+            $('.nav-sub-menu a').each(function() {
+                if ($(this).attr('href') === url) {
+                    $(this).addClass('active');
+                }
+            });
+        }
+
+        // 绑定 SPA 事件委托（用命名空间，便于重新绑定前清除）
+        function bindSpaEvents() {
+            // 清除旧的 SPA 事件委托
+            $(document).off('.spa');
+
+            // 侧边栏导航点击 → AJAX 加载
+            $(document).on('click.spa', '.nav-sub-menu a', function(e) {
+                e.preventDefault();
+                navigateTo($(this).attr('href'));
+            });
+
+            // navbar-brand 点击 → 回到首页
+            $(document).on('click.spa', '.navbar-brand', function(e) {
+                e.preventDefault();
+                navigateTo('{{.url_home}}');
+            });
+
+            // tab-content 内的内部链接 → AJAX 加载（拦截文章、标签、审批、消息、首页链接）
+            $(document).on('click.spa', '.tab-content a[href]', function(e) {
+                var href = $(this).attr('href');
+                if (!href) return;
+                if (href.indexOf('/articles/') === 0 || href.indexOf('/tags/') === 0 ||
+                    href.indexOf('/approvals/') === 0 || href.indexOf('/notifications/') === 0 ||
+                    href === '{{.url_home}}') {
+                    e.preventDefault();
+                    navigateTo(href);
+                }
+            });
+
+            // navbar 用户下拉菜单中的审批链接 → AJAX 加载
+            $(document).on('click.spa', '.dropdown-item[href="{{.url_approval_list}}"]', function(e) {
+                e.preventDefault();
+                // 关闭下拉菜单
+                $('.user-dropdown').removeClass('open');
+                navigateTo('{{.url_approval_list}}');
+            });
+
+            // navbar 用户下拉菜单中的“我的消息”链接 → AJAX 加载
+            $(document).on('click.spa', '.dropdown-item[href="{{.url_notification_list}}"]', function(e) {
+                e.preventDefault();
+                $('.user-dropdown').removeClass('open');
+                navigateTo('{{.url_notification_list}}');
+            });
+
+            // 表单提交 → AJAX 提交（跳过有 onsubmit 的表单，如标签管理的 addTag）
+            $(document).on('submit.spa', '.tab-content form', function(e) {
+                if (this.onsubmit) return; // 表单有自己的处理逻辑
+                e.preventDefault();
+                var $form = $(this);
+                var actionUrl = $form.attr('action') || window.location.pathname;
+                var method = ($form.attr('method') || 'POST').toUpperCase();
+
+                $('.tab-content').html('<div style="text-align:center;padding:3rem;color:#999;">提交中...</div>');
+
+                $.ajax({
+                    url: actionUrl,
+                    type: method,
+                    data: $form.serialize(),
+                    dataType: 'html',
+                    success: function(html, textStatus, jqXHR) {
+                        // 获取重定向后的最终 URL
+                        var finalUrl = actionUrl;
+                        if (jqXHR.responseURL) {
+                            try {
+                                var u = new URL(jqXHR.responseURL);
+                                finalUrl = u.pathname + u.search;
+                            } catch(err) {}
+                        }
+                        // 注册目标页面为标签
+                        registerTab(finalUrl);
+                        processResponseHtml(html, finalUrl);
+                    },
+                    error: function(xhr) {
+                        var msg = '提交失败，请重试';
+                        if (xhr && xhr.responseText) {
+                            try {
+                                var resp = JSON.parse(xhr.responseText);
+                                if (resp.error) msg = resp.error;
+                            } catch(e) {
+                                msg = '提交失败（HTTP ' + (xhr.status || 0) + '）';
+                            }
+                        } else if (xhr && xhr.status) {
+                            msg = '提交失败（HTTP ' + xhr.status + '）';
+                        }
+                        $('.tab-content').html('<div style="text-align:center;padding:3rem;color:#e74c3c;">' + msg + '</div>');
+                    }
+                });
+            });
+        }
+
+        // ========== 初始化 ==========
+        $(document).ready(function() {
+            // 登录后弹窗提示待审批（每次进入首页检查一次，避免重复弹窗）
+            // 红点数量已由 WebSocket 实时推送，此处仅为首次进入首页的一次性弹窗提醒
+            if (!sessionStorage.getItem('approval_notified')) {
+                sessionStorage.setItem('approval_notified', '1');
+                $.ajax({
+                    url: '/approvals/pending-count',
+                    type: 'GET',
+                    success: function(resp) {
+                        if (resp.code === 0 && resp.count > 0) {
+                            showApprovalPopup(resp.count);
+                        }
+                    }
+                });
+            }
+
+            // 恢复侧边栏状态
+            if (localStorage.getItem('sidebar_expanded') === 'true') {
+                document.getElementById('sidebar').classList.add('sidebar-expanded');
+                var btn = document.getElementById('sidebarToggle');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+            }
+
+            // 绑定 SPA 事件委托
+            bindSpaEvents();
+
+            // 渲染标签页
+            renderTabs();
+
+            // 高亮当前导航（首页）
+            updateNavHighlight(currentTabUrl);
+        });
+
+        // 登录后待审批弹窗
+        function showApprovalPopup(count) {
+            var html =
+                '<div class="modal-overlay" id="approvalPopup" style="display:flex;">' +
+                    '<div class="modal-box" style="background:white;border-radius:10px;width:90%;max-width:420px;box-shadow:0 10px 40px rgba(0,0,0,0.2);overflow:hidden;">' +
+                        '<div style="padding:1.5rem;text-align:center;">' +
+                            '<div style="font-size:2.5rem;margin-bottom:0.5rem;">&#128276;</div>' +
+                            '<h3 style="color:#2c3e50;margin-bottom:0.5rem;">您有新的待审批</h3>' +
+                            '<p style="color:#6c757d;margin-bottom:1.25rem;">当前共有 <strong style="color:#f39c12;">' + count + '</strong> 条文章编辑申请等待您处理</p>' +
+                            '<div style="display:flex;gap:0.5rem;justify-content:center;">' +
+                                '<button onclick="$(\'#approvalPopup\').remove();" style="padding:0.5rem 1.25rem;background:#f1f3f5;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;color:#495057;">稍后处理</button>' +
+                                '<button onclick="$(\'#approvalPopup\').remove();navigateTo(\'{{.url_approval_list}}\');" style="padding:0.5rem 1.25rem;background:#4a90e2;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;color:white;font-weight:500;">立即查看</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            $('body').append(html);
+        }
+    </script>
+</body>
+</html>

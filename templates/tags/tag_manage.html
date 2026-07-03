@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签管理 - Gin Demo</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <style>
+        /* 页面特有样式 */
+        /* 页面标题 */
+        .page-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 新增标签表单 */
+        .add-tag-form {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .add-input {
+            flex: 1;
+            max-width: 300px;
+            padding: 0.6rem 1rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .add-input:focus { border-color: #4a90e2; }
+
+        .add-btn {
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.92rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .add-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.35); }
+
+        /* 标签列表表格 */
+        .tag-table-wrap {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tag-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tag-table th {
+            background-color: #f8f9fa;
+            padding: 0.85rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.88rem;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tag-table td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid #f1f3f5;
+            font-size: 0.92rem;
+            color: #333;
+            vertical-align: middle;
+        }
+
+        .tag-table tr:last-child td { border-bottom: none; }
+        .tag-table tr:hover td { background-color: #fafbfc; }
+
+        .tag-name-cell {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .tag-count-badge {
+            display: inline-block;
+            padding: 0.15rem 0.65rem;
+            background-color: #eaf2fb;
+            color: #4a90e2;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        .action-btns { display: flex; gap: 0.5rem; }
+
+        .btn-action {
+            padding: 0.35rem 0.85rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-rename {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .btn-rename:hover { background-color: #ffe69c; }
+
+        .btn-delete {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .btn-delete:hover { background-color: #f5c6cb; }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #adb5bd;
+        }
+        .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .empty-state-text { font-size: 1rem; }
+
+        /* 分页控件 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .pagination-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-right: 1rem;
+        }
+        .page-btn {
+            min-width: 36px;
+            height: 36px;
+            padding: 0 0.6rem;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        .page-btn:hover:not(.active):not(:disabled) {
+            border-color: #4a90e2;
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        .page-btn.active {
+            background: #4a90e2;
+            border-color: #4a90e2;
+            color: white;
+            cursor: default;
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .page-ellipsis {
+            padding: 0 0.3rem;
+            color: #adb5bd;
+        }
+
+        /* 内联编辑 */
+        .inline-edit { display: none; }
+        .inline-edit.active { display: inline-flex; gap: 0.4rem; align-items: center; }
+        .inline-input {
+            width: 160px;
+            padding: 0.35rem 0.6rem;
+            border: 2px solid #4a90e2;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .inline-confirm {
+            padding: 0.35rem 0.6rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.82rem;
+        }
+        .inline-cancel {
+            padding: 0.35rem 0.6rem;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.82rem;
+        }
+
+        .tag-text { display: inline; }
+        .tag-text.editing { display: none; }
+
+        /* 提示消息 */
+        .toast-msg {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            padding: 0.75rem 1.25rem;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9rem;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .toast-msg.show { opacity: 1; transform: translateY(0); }
+        .toast-success { background-color: #28a745; }
+        .toast-error { background-color: #dc3545; }
+    </style>
+    <script>
+        if(localStorage.getItem('sidebar_expanded')==='true')document.write('<style>.sidebar{width:220px}</style>');
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{.url_home}}" class="navbar-brand">Gin Demo</a>
+        <div class="user-info">
+            <div class="user-dropdown">
+                <span class="user-name" onclick="toggleUserMenu()">
+                    <span class="user-avatar" id="navAvatar">
+                        {{if .avatar_url}}<img src="{{.avatar_url}}" alt="">{{else}}<span>{{slice .username 0 1}}</span>{{end}}
+                    </span>
+                    {{.username}} <span class="dropdown-arrow">&#9660;</span>
+                    <span class="approval-badge" id="approvalBadge" style="display:none;"></span>
+                </span>
+                <div class="dropdown-menu" id="userDropdownMenu">
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openAvatarModal()">
+                        &#128247; 修改头像
+                    </a>
+                    <a href="{{.url_approval_list}}" class="dropdown-item">
+                        &#9989; 我的审批
+                        <span class="badge-num" id="approvalBadgeNum"></span>
+                    </a>
+                    <a href="{{.url_logout}}" class="dropdown-item">&#128682; 退出登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像上传弹窗 -->
+    <div class="avatar-modal-mask" id="avatarModalMask" onclick="if(event.target===this)closeAvatarModal()">
+        <div class="avatar-modal">
+            <h3>修改头像</h3>
+            <div class="avatar-preview" id="avatarPreview">
+                <div class="avatar-preview-placeholder">点击下方按钮<br>选择图片</div>
+            </div>
+            <input type="file" class="avatar-file-input" id="avatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp">
+            <div class="avatar-modal-actions">
+                <button class="avatar-btn-cancel" onclick="closeAvatarModal()">取消</button>
+                <button class="avatar-btn-upload" id="avatarUploadBtn" onclick="uploadAvatar()" disabled>上传</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <button class="sidebar-toggle" id="sidebarToggle" title="展开导航" onclick="toggleSidebar()">&#9776;</button>
+        <div class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <div class="nav-header expanded active" onclick="toggleSubMenu(this)">
+                        <span><span class="tab-icon">&#128196;</span> 文章管理</span>
+                        <span class="arrow">&#9654;</span>
+                    </div>
+                    <ul class="nav-sub-menu show">
+                        <li><a href="{{.url_article_create}}">新增文章</a></li>
+                        <li><a href="{{.url_article_list}}">文章列表</a></li>
+                        <li><a href="{{.url_tag_manage}}" class="active">标签管理</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content-area">
+            <!-- 标签页栏（动态渲染） -->
+            <div class="tabs-container" id="tabsContainer"></div>
+
+            <!-- 内容区域 -->
+            <div class="tab-content">
+                <h1 class="page-title">
+                    标签管理
+                    <span style="font-size: 0.9rem; font-weight: normal; color: #888;">共 {{.total}} 个标签</span>
+                </h1>
+
+                <!-- 新增标签 -->
+                <form class="add-tag-form" id="addTagForm" onsubmit="return addTag(event)">
+                    <input type="text" name="name" id="newTagName" class="add-input"
+                           placeholder="输入新标签名称..." required maxlength="50">
+                    <button type="submit" class="add-btn">+ 新增标签</button>
+                </form>
+
+                <!-- 标签列表 -->
+                {{if .tags}}
+                <div class="tag-table-wrap">
+                    <table class="tag-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">标签名称</th>
+                                <th style="width: 20%;">关联文章数</th>
+                                <th style="width: 20%;">创建时间</th>
+                                <th style="width: 20%;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .tags}}
+                            <tr data-id="{{.ID}}">
+                                <td>
+                                    <span class="tag-text" id="text-{{.ID}}">{{.Name}}</span>
+                                    <span class="inline-edit" id="edit-{{.ID}}">
+                                        <input type="text" class="inline-input" id="input-{{.ID}}"
+                                               value="{{.Name}}" maxlength="50"
+                                               onkeydown="if(event.key==='Enter'){renameTag({{.ID}})} if(event.key==='Escape'){cancelRename({{.ID}})}">
+                                        <button class="inline-confirm" onclick="renameTag({{.ID}})">确认</button>
+                                        <button class="inline-cancel" onclick="cancelRename({{.ID}})">取消</button>
+                                    </span>
+                                </td>
+                                <td><span class="tag-count-badge">{{.ArticleCount}} 篇</span></td>
+                                <td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn-action btn-rename" onclick="showRename({{.ID}})">重命名</button>
+                                        <button class="btn-action btn-delete" onclick="deleteTag({{.ID}}, '{{.Name}}')">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控件（URL 跳转刷新页面） -->
+                {{if gt .total_pages 1}}
+                <div class="pagination">
+                    <span class="pagination-info">共 {{.total}} 个标签，第 {{.page}}/{{.total_pages}} 页</span>
+                    {{if gt .page 1}}
+                    <a class="page-btn" href="{{.url_tag_manage}}?page={{sub .page 1}}">&#8249; 上一页</a>
+                    {{else}}
+                    <button class="page-btn" disabled>&#8249; 上一页</button>
+                    {{end}}
+                    {{range $i := buildPageList $.page $.total_pages}}
+                    {{if eq $i "..."}}
+                    <span class="page-ellipsis">...</span>
+                    {{else if eq $i $.page}}
+                    <span class="page-btn active">{{$i}}</span>
+                    {{else}}
+                    <a class="page-btn" href="{{$.url_tag_manage}}?page={{$i}}">{{$i}}</a>
+                    {{end}}
+                    {{end}}
+                    {{if lt .page .total_pages}}
+                    <a class="page-btn" href="{{.url_tag_manage}}?page={{add .page 1}}">下一页 &#8250;</a>
+                    {{else}}
+                    <button class="page-btn" disabled>下一页 &#8250;</button>
+                    {{end}}
+                </div>
+                {{else if gt .total 0}}
+                <div class="pagination">
+                    <span class="pagination-info">共 {{.total}} 个标签</span>
+                </div>
+                {{end}}
+                {{else}}
+                <div class="empty-state">
+                    <div class="empty-state-icon">&#128295;</div>
+                    <div class="empty-state-text">暂无标签，请在上方添加新标签</div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast-msg"></div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script>window.AVATAR_UPLOAD_URL = '{{.url_avatar_upload}}';</script>
+    <script src="/static/js/layout.js"></script>
+    <script>
+        // ========== 新增标签 ==========
+        function addTag(e) {
+            e.preventDefault();
+            var name = $('#newTagName').val().trim();
+            if (!name) return;
+
+            $.ajax({
+                url: '/tags/create',
+                type: 'POST',
+                data: { name: name },
+                success: function(res) {
+                    if (res.code === 0) {
+                        showToast('标签 "' + name + '" 添加成功', 'success');
+                        $('#newTagName').val('');
+                        setTimeout(function() {
+                            if (typeof loadPageContent === 'function') { loadPageContent('{{.url_tag_manage}}'); }
+                            else { location.reload(); }
+                        }, 800);
+                    } else {
+                        showToast(res.msg || '添加失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('请求失败', 'error');
+                }
+            });
+        }
+
+        // ========== 重命名标签 ==========
+        function showRename(id) {
+            $('#text-' + id).addClass('editing');
+            $('#edit-' + id).addClass('active');
+            $('#input-' + id).focus().select();
+        }
+
+        function cancelRename(id) {
+            $('#text-' + id).removeClass('editing');
+            $('#edit-' + id).removeClass('active');
+            // 恢复原值
+            var orig = $('#text-' + id).text();
+            $('#input-' + id).val(orig);
+        }
+
+        function renameTag(id) {
+            var newName = $('#input-' + id).val().trim();
+            if (!newName) {
+                showToast('标签名称不能为空', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: '/tags/rename',
+                type: 'POST',
+                data: { id: id, name: newName },
+                success: function(res) {
+                    if (res.code === 0) {
+                        showToast('重命名成功', 'success');
+                        setTimeout(function() {
+                            if (typeof loadPageContent === 'function') { loadPageContent('{{.url_tag_manage}}'); }
+                            else { location.reload(); }
+                        }, 800);
+                    } else {
+                        showToast(res.msg || '重命名失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('请求失败', 'error');
+                }
+            });
+        }
+
+        // ========== 删除标签 ==========
+        function deleteTag(id, name) {
+            if (!confirm('确定要删除标签 "' + name + '" 吗？\n删除后该标签与所有文章的关联将被清除。')) return;
+
+            $.ajax({
+                url: '/tags/delete',
+                type: 'POST',
+                data: { id: id },
+                success: function(res) {
+                    if (res.code === 0) {
+                        showToast('标签已删除', 'success');
+                        $('tr[data-id="' + id + '"]').fadeOut(300, function() {
+                            $(this).remove();
+                            // 如果没有标签了，显示空状态
+                            if ($('.tag-table tbody tr').length === 0) {
+                                $('.tag-table-wrap').replaceWith(
+                                    '<div class="empty-state">' +
+                                    '<div class="empty-state-icon">&#128295;</div>' +
+                                    '<div class="empty-state-text">暂无标签，请在上方添加新标签</div></div>'
+                                );
+                            }
+                        });
+                    } else {
+                        showToast(res.msg || '删除失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('请求失败', 'error');
+                }
+            });
+        }
+
+        // ========== Toast 提示 ==========
+        function showToast(msg, type) {
+            var $toast = $('#toast');
+            $toast.text(msg).removeClass('toast-success toast-error show')
+                   .addClass('toast-' + type);
+            // 触发 reflow 后加 show
+            void $toast[0].offsetWidth;
+            $toast.addClass('show');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(function() {
+                $toast.removeClass('show');
+            }, 2500);
+        }
+
+        // ========== 导航栏交互 ==========
+        function toggleSubMenu(header) {
+            $(header).toggleClass('expanded');
+            $(header).siblings('.nav-sub-menu').toggleClass('show');
+            $('.nav-header').not($(header)).removeClass('active');
+            if ($(header).hasClass('expanded')) { $(header).addClass('active'); }
+        }
+
+        // 侧边栏展开/收起（inline onclick 调用）
+        // 注：toggleUserMenu / openAvatarModal / closeAvatarModal / uploadAvatar
+        //     以及 #avatarFileInput 的 change 事件已抽到 /static/js/layout.js
+
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var btn = document.getElementById('sidebarToggle');
+            if (sb.classList.contains('sidebar-expanded')) {
+                sb.classList.remove('sidebar-expanded');
+                btn.innerHTML = '&#9776;';
+                btn.title = '展开导航';
+                btn.style.left = '0';
+                localStorage.setItem('sidebar_expanded', 'false');
+            } else {
+                sb.classList.add('sidebar-expanded');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+                localStorage.setItem('sidebar_expanded', 'true');
+            }
+        }
+
+        // ========== 标签页持久化管理系统 ==========
+        var CURRENT_PAGE_TAB = {
+            url: '{{.url_tag_manage}}',
+            title: '标签管理',
+            icon: '&#128295;',
+            closable: true
+        };
+
+        var TAB_REGISTRY = {};
+        TAB_REGISTRY['{{.url_home}}']         = { title: '首页',     icon: '&#127968;', closable: false };
+        TAB_REGISTRY['{{.url_article_create}}'] = { title: '新增文章', icon: '&#9998;',   closable: true };
+        TAB_REGISTRY['{{.url_article_list}}']  = { title: '文章列表', icon: '&#128220;',  closable: true };
+        TAB_REGISTRY['{{.url_tag_manage}}']   = { title: '标签管理', icon: '&#128295;',  closable: true };
+
+        function getOpenTabs() {
+            try { return JSON.parse(localStorage.getItem('open_tabs') || '[]'); } catch(e) { return []; }
+        }
+        function saveOpenTabs(tabs) { localStorage.setItem('open_tabs', JSON.stringify(tabs)); }
+
+        function ensureCurrentTab(tabs) {
+            var url = CURRENT_PAGE_TAB.url;
+            if (!tabs.some(function(t) { return t.url === url; })) {
+                tabs.push({ url: url, title: CURRENT_PAGE_TAB.title, icon: CURRENT_PAGE_TAB.icon, closable: CURRENT_PAGE_TAB.closable });
+            }
+            return tabs;
+        }
+
+        function renderTabs() {
+            var $container = $('#tabsContainer'); $container.empty();
+            var tabs = getOpenTabs(); tabs = ensureCurrentTab(tabs); saveOpenTabs(tabs);
+            var currentUrl = CURRENT_PAGE_TAB.url;
+            for (var i = 0; i < tabs.length; i++) {
+                var tab = tabs[i];
+                var isActive = (tab.url === currentUrl) ? ' active' : '';
+                var closeHtml = tab.closable ? '<span class="tab-close" onclick="closeTab(event, this)">&times;</span>' : '';
+                $container.append('<a href="' + tab.url + '" class="tab-item' + isActive + '">' +
+                    '<span class="tab-icon">' + tab.icon + '</span><span>' + tab.title + '</span>' + closeHtml + '</a>');
+            }
+        }
+
+        function closeTab(event, element) {
+            event.preventDefault(); event.stopPropagation();
+            var $tab = $(element).closest('.tab-item');
+            var closeUrl = $tab.attr('href');
+            var isActive = $tab.hasClass('active');
+            var tabs = getOpenTabs();
+            tabs = tabs.filter(function(t) { return t.url !== closeUrl; });
+            saveOpenTabs(tabs);
+            if (isActive) {
+                window.location.href = tabs.length > 0 ? tabs[0].url : '{{.url_home}}';
+            } else { renderTabs(); }
+        }
+
+        function interceptNavClick(url) {
+            if (TAB_REGISTRY[url]) {
+                var info = TAB_REGISTRY[url];
+                var tabs = getOpenTabs();
+                if (!tabs.some(function(t) { return t.url === url; })) {
+                    tabs.push({ url: url, title: info.title, icon: info.icon, closable: info.closable });
+                    saveOpenTabs(tabs);
+                }
+            }
+        }
+
+        $(document).ready(function() {
+            // 恢复侧边栏状态
+            if (localStorage.getItem('sidebar_expanded') === 'true') {
+                document.getElementById('sidebar').classList.add('sidebar-expanded');
+                var btn = document.getElementById('sidebarToggle');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+            }
+
+            renderTabs();
+            var currentPath = window.location.pathname;
+            $('.nav-sub-menu a').each(function() {
+                if ($(this).attr('href') === currentPath) {
+                    $(this).addClass('active');
+                    $(this).closest('.nav-sub-menu').addClass('show')
+                           .siblings('.nav-header').addClass('expanded active');
+                }
+            });
+            $('#newTagName').on('keydown', function(e) {
+                if (e.keyCode === 13) { e.preventDefault(); $('#addTagForm').trigger('submit'); }
+            });
+            $('.nav-sub-menu a').on('click', function() { interceptNavClick($(this).attr('href')); });
+        });
+    </script>
+</body>
+</html>

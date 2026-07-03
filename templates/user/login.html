@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 420px;
+            max-width: 90%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        /* 登录方式切换 */
+        .login-type-switcher {
+            display: flex;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-type-btn {
+            flex: 1;
+            padding: 0.6rem;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .login-type-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .login-type-btn:hover:not(.active) {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 验证码输入组 */
+        .code-group {
+            display: flex;
+            gap: 0.6rem;
+        }
+        .code-group input {
+            flex: 1;
+        }
+        .send-code-btn {
+            padding: 0.75rem 1rem;
+            background: #f5f5f5;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+        .send-code-btn:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+        .send-code-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            border-color: #bdbdbd;
+            color: #999;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(102,126,234,0.4);
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .hint {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        /* 错误/成功提示 */
+        .alert {
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .alert-error {
+            background-color: #fdecea;
+            color: #e74c3c;
+            border: 1px solid #f5c2c0;
+        }
+        .alert-success {
+            background-color: #e8f8f0;
+            color: #27ae60;
+            border: 1px solid #b8e6c8;
+        }
+
+        /* 登录按钮 loading 状态 */
+        button[type="submit"].loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>用户登录</h1>
+
+        <!-- 提示信息 -->
+        <div class="alert alert-error" id="errorMsg"></div>
+
+        <!-- 登录方式切换 -->
+        <div class="login-type-switcher">
+            <button type="button" class="login-type-btn active" data-type="email" onclick="switchLoginType('email')">
+                邮箱登录
+            </button>
+            <button type="button" class="login-type-btn" data-type="username" onclick="switchLoginType('username')">
+                用户名登录
+            </button>
+        </div>
+
+        <form id="loginForm" action="{{.url_login}}" method="POST">
+            <input type="hidden" id="login_type" name="login_type" value="email">
+
+            <div class="form-group" id="emailGroup">
+                <label for="account">邮箱地址</label>
+                <input type="email" id="account" name="account" required placeholder="请输入邮箱地址">
+            </div>
+
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required placeholder="请输入密码">
+            </div>
+
+            <div class="form-group">
+                <label for="verify_code">邮箱验证码</label>
+                <div class="code-group">
+                    <input type="text" id="verify_code" name="verify_code" required maxlength="6" placeholder="请输入6位验证码">
+                    <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="sendLoginCode()">获取验证码</button>
+                </div>
+            </div>
+
+            <button type="submit" id="loginBtn">登录</button>
+        </form>
+
+        <p class="hint">提示：也可以直接输入邮箱或用户名，系统会自动识别</p>
+
+        <div class="link">
+            还没有账号？<a href="{{.url_register}}">立即注册</a>
+            <span style="margin: 0 0.5rem; color: #ccc;">|</span>
+            <a href="{{.url_reset_password}}">忘记密码？</a>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script>
+        // 显示错误提示
+        function showError(msg) {
+            $('#errorMsg').html('&#9888; ' + msg).show();
+            setTimeout(function() { $('#errorMsg').fadeOut(300); }, 3000);
+        }
+
+        // 显示成功提示
+        function showSuccess(msg) {
+            $('#errorMsg').html('&#10004; ' + msg)
+                .removeClass('alert-error').addClass('alert-success').show();
+            setTimeout(function() { $('#errorMsg').fadeOut(300, function(){
+                $(this).removeClass('alert-success').addClass('alert-error');
+            }); }, 3000);
+        }
+
+        // 发送登录验证码
+        var codeCountdown = 0;
+        function sendLoginCode() {
+            var account = $('#account').val().trim();
+            if (!account) {
+                showError('请先输入账号');
+                $('#account').focus();
+                return;
+            }
+            var loginType = $('#login_type').val();
+            var $btn = $('#sendCodeBtn');
+
+            $btn.prop('disabled', true).text('发送中...');
+
+            $.ajax({
+                url: '{{.url_send_login_code}}',
+                type: 'POST',
+                data: { account: account, login_type: loginType },
+                dataType: 'json',
+                success: function(resp) {
+                    showSuccess(resp.message || '验证码已发送，请查收邮件');
+                    startCountdown(60);
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).text('获取验证码');
+                    var msg;
+                    if (xhr.status === 404) {
+                        try { msg = JSON.parse(xhr.responseText).error; } catch(e) { msg = '账号不存在'; }
+                    } else if (xhr.status === 400) {
+                        try { msg = JSON.parse(xhr.responseText).error; } catch(e) { msg = '请求参数错误'; }
+                    } else if (xhr.status === 500) {
+                        msg = '验证码发送失败，请稍后重试';
+                    } else {
+                        msg = '发送失败，请重试';
+                    }
+                    showError(msg);
+                }
+            });
+        }
+
+        // 启动倒计时
+        function startCountdown(seconds) {
+            codeCountdown = seconds;
+            var $btn = $('#sendCodeBtn');
+            $btn.prop('disabled', true).text(codeCountdown + 's 后重发');
+            var timer = setInterval(function() {
+                codeCountdown--;
+                if (codeCountdown <= 0) {
+                    clearInterval(timer);
+                    $btn.prop('disabled', false).text('获取验证码');
+                } else {
+                    $btn.text(codeCountdown + 's 后重发');
+                }
+            }, 1000);
+        }
+
+        // 切换登录类型
+        function switchLoginType(type) {
+            document.getElementById('login_type').value = type;
+            const accountInput = document.getElementById('account');
+            const emailGroup = document.getElementById('emailGroup');
+            const label = emailGroup.querySelector('label');
+
+            // 更新按钮状态
+            document.querySelectorAll('.login-type-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.type === type) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 更新输入框类型和提示文字
+            if (type === 'email') {
+                accountInput.type = 'email';
+                accountInput.placeholder = '请输入邮箱地址';
+                label.textContent = '邮箱地址';
+                accountInput.value = '';
+            } else {
+                accountInput.type = 'text';
+                accountInput.placeholder = '请输入用户名';
+                label.textContent = '用户名';
+                accountInput.value = '';
+            }
+            // 切换后清空验证码（避免误用）并重置发送按钮
+            $('#verify_code').val('');
+            var $btn = $('#sendCodeBtn');
+            $btn.prop('disabled', false).text('获取验证码');
+            $('#errorMsg').hide();
+        }
+
+        // AJAX 登录提交
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            var $btn = $('#loginBtn');
+
+            $('#errorMsg').hide();
+            $btn.addClass('loading').text('登录中...');
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: 'POST',
+                data: $form.serialize(),
+                dataType: 'json',
+                success: function(resp) {
+                    // 登录成功，后端返回 {code:0, redirect:"/home"}
+                    $btn.text('登录成功');
+                    window.location.href = resp.redirect || '{{.url_home}}';
+                },
+                error: function(xhr) {
+                    $btn.removeClass('loading').text('登录');
+                    if (xhr.status === 400 || xhr.status === 401) {
+                        var resp;
+                        try { resp = JSON.parse(xhr.responseText); } catch(e) {}
+                        showError(resp && resp.error ? resp.error : '账号或密码错误');
+                    } else if (xhr.status === 500) {
+                        showError('服务器繁忙，请稍后重试');
+                    } else {
+                        showError('登录失败，请重试');
+                    }
+                }
+            });
+        });
+
+        // 回车键提交
+        $('#account, #password, #verify_code').on('keypress', function(e) {
+            if (e.which === 13) { e.preventDefault(); $('#loginForm').submit(); }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-23 20:14:54"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-23 20:14:54"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-23 20:14:54"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-23 20:14:54"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-23 20:14:55"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-23 20:14:55"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-23 20:14:55"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-23 20:14:55"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-23 20:15:50"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-23 20:15:50"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-23 20:15:50"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-23 20:15:50"}
+{"ip":"::1","latency":"3.8279ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-23 20:15:58","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"51.9333ms","level":"info","method":"POST","msg":"请求重定向","path":"/articles/create","status":302,"time":"2026-06-23 20:16:13","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"3.9262ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-23 20:16:13","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"2.9753ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-23 20:18:09","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"44.1946ms","level":"info","method":"POST","msg":"请求重定向","path":"/articles/create","status":302,"time":"2026-06-23 20:18:38","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"3.6391ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-23 20:18:38","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:01:11"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:01:11"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:01:11"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:01:11"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:08:13"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:08:13"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:08:13"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:08:13"}
+{"ip":"::1","latency":"2.6655ms","level":"info","method":"GET","msg":"请求成功","path":"/user/register","status":200,"time":"2026-06-24 09:09:23","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"0s","level":"warning","method":"GET","msg":"请求异常","path":"/favicon.ico","status":404,"time":"2026-06-24 09:09:23","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"0s","level":"info","method":"GET","msg":"请求重定向","path":"/home","status":302,"time":"2026-06-24 09:09:29","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"0s","level":"warning","method":"GET","msg":"请求异常","path":"/login","status":404,"time":"2026-06-24 09:09:29","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:10:32"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:10:32"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:10:32"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:10:32"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:11:24"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:11:24"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:11:24"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:11:24"}
+{"ip":"::1","latency":"0s","level":"info","method":"GET","msg":"请求重定向","path":"/home","status":302,"time":"2026-06-24 09:12:05","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"1.7363ms","level":"info","method":"GET","msg":"请求成功","path":"/user/login","status":200,"time":"2026-06-24 09:12:05","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"75.2366ms","level":"info","method":"POST","msg":"请求重定向","path":"/user/login","status":302,"time":"2026-06-24 09:12:19","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"1.3211ms","level":"info","method":"GET","msg":"请求成功","path":"/home","status":200,"time":"2026-06-24 09:12:19","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"4.7665ms","level":"info","method":"GET","msg":"请求成功","path":"/tags/manage","status":200,"time":"2026-06-24 09:12:23","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"16.7729ms","level":"info","method":"POST","msg":"请求成功","path":"/tags/create","status":200,"time":"2026-06-24 09:13:58","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"3.2261ms","level":"info","method":"GET","msg":"请求成功","path":"/tags/manage","status":200,"time":"2026-06-24 09:13:59","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:16:35"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:16:35"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:16:35"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:16:35"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:16:41"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:16:41"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:16:41"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:16:41"}
+{"ip":"::1","latency":"2.8508ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-24 09:17:26","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"3.3801ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-24 09:20:07","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"3.5826ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-24 09:20:08","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"6.1296ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:20:10","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"5.0801ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list?tag=golang","status":200,"time":"2026-06-24 09:20:35","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:21:37"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:21:37"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:21:37"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:21:37"}
+{"ip":"::1","latency":"0s","level":"info","method":"GET","msg":"请求重定向","path":"/articles/list?tag=golang","status":302,"time":"2026-06-24 09:22:27","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"1.0146ms","level":"info","method":"GET","msg":"请求成功","path":"/user/login","status":200,"time":"2026-06-24 09:22:27","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"76.6621ms","level":"info","method":"POST","msg":"请求重定向","path":"/user/login","status":302,"time":"2026-06-24 09:22:43","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"0s","level":"info","method":"GET","msg":"请求成功","path":"/home","status":200,"time":"2026-06-24 09:22:43","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"6.5629ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:23:14","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"19.796ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list?tag=%E5%AE%B6%E5%BA%AD","status":200,"time":"2026-06-24 09:23:17","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:25:11"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:25:11"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:25:11"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:25:11"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:25:56"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:25:56"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:25:56"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:25:56"}
+{"ip":"::1","latency":"7.0762ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list?tag=%E5%AE%B6%E5%BA%AD","status":200,"time":"2026-06-24 09:26:13","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"3.1679ms","level":"info","method":"GET","msg":"请求成功","path":"/home","status":200,"time":"2026-06-24 09:26:19","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"8.007ms","level":"info","method":"GET","msg":"请求成功","path":"/tags/manage","status":200,"time":"2026-06-24 09:26:26","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"18.892ms","level":"info","method":"POST","msg":"请求成功","path":"/tags/create","status":200,"time":"2026-06-24 09:26:31","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"2.9237ms","level":"info","method":"GET","msg":"请求成功","path":"/tags/manage","status":200,"time":"2026-06-24 09:26:31","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:27:49"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:27:49"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:27:49"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:27:49"}
+{"ip":"::1","latency":"5.9349ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:28:07","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:29:19"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:29:19"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:29:19"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:29:19"}
+{"ip":"::1","latency":"4.9856ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:29:24","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:31:06"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:31:06"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:31:06"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:31:06"}
+{"ip":"::1","latency":"5.2714ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:31:10","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"4.5859ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-24 09:31:15","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"65.2956ms","level":"info","method":"POST","msg":"请求重定向","path":"/articles/create","status":302,"time":"2026-06-24 09:32:20","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"5.2338ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:32:20","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:35:15"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:35:15"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:35:15"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:35:15"}
+{"ip":"::1","latency":"5.726ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:35:37","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:36:21"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:36:21"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:36:22"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:36:22"}
+
+
+
+
+
+{"ip":"::1","latency":"9.1313ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:36:52","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"6.0623ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:36:53","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"5.7716ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list?tag=docker","status":200,"time":"2026-06-24 09:37:04","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"3.0811ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-24 09:37:57","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"50.4209ms","level":"info","method":"POST","msg":"请求重定向","path":"/articles/create","status":302,"time":"2026-06-24 09:38:39","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"5.7184ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:38:39","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:40:00"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:40:00"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:40:00"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:40:00"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:40:27"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:40:27"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:40:27"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:40:27"}
+{"ip":"::1","latency":"3.8586ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-24 09:40:58","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 09:44:43"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 09:44:43"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 09:44:44"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 09:44:44"}
+{"ip":"::1","latency":"101.2971ms","level":"info","method":"POST","msg":"请求重定向","path":"/articles/create","status":302,"time":"2026-06-24 09:46:19","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"4.7875ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 09:46:19","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 10:00:11"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 10:00:11"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 10:00:11"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 10:00:11"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 10:00:12"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 10:00:12"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 10:00:12"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 10:00:12"}
+{"ip":"::1","latency":"6.279ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 10:01:26","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"3.9874ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/create","status":200,"time":"2026-06-24 10:01:28","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 10:01:39"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 10:01:39"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 10:01:39"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 10:01:39"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 10:01:58"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 10:01:58"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 10:01:59"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 10:01:59"}
+{"level":"info","msg":"日志系统初始化完成levelinfoformatjson","time":"2026-06-24 10:02:31"}
+{"level":"info","msg":"SkyWalking 链路追踪已启用backend172.22.219.86:11800","time":"2026-06-24 10:02:31"}
+{"level":"info","msg":"Redis连接成功","time":"2026-06-24 10:02:32"}
+{"level":"info","msg":"服务启动成功port:8080","time":"2026-06-24 10:02:32"}
+{"ip":"::1","latency":"42.2119ms","level":"info","method":"POST","msg":"请求重定向","path":"/articles/create","status":302,"time":"2026-06-24 10:02:37","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"4.6739ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 10:02:37","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"5.9907ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list","status":200,"time":"2026-06-24 10:04:16","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+{"ip":"::1","latency":"5.1236ms","level":"info","method":"GET","msg":"请求成功","path":"/articles/list?tag=%E4%B8%96%E7%95%8C%E6%9D%AF","status":200,"time":"2026-06-24 10:04:20","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"}
+[36mINFO[0m[2026-06-24 10:15:55] 日志系统初始化完成levelinfoformattext                 
+[36mINFO[0m[2026-06-24 10:15:55] SkyWalking 链路追踪已启用backend172.22.219.86:11800 
+[36mINFO[0m[2026-06-24 10:15:55] Redis连接成功                                    
+[36mINFO[0m[2026-06-24 10:15:55] 服务启动成功port:8080                              
+[36mINFO[0m[2026-06-24 10:16:15] 请求成功                                          [36mip[0m="::1" [36mlatency[0m=4.8312ms [36mmethod[0m=GET [36mpath[0m=/articles/create [36mstatus[0m=200 [36muser_agent[0m="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+[36mINFO[0m[2026-06-24 10:16:16] 请求成功                                          [36mip[0m="::1" [36mlatency[0m=4.588ms [36mmethod[0m=GET [36mpath[0m=/tags/manage [36mstatus[0m=200 [36muser_agent[0m="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+[36mINFO[0m[2026-06-24 10:16:27] 请求成功                                          [36mip[0m="::1" [36mlatency[0m=31.0092ms [36mmethod[0m=POST [36mpath[0m=/tags/create [36mstatus[0m=200 [36muser_agent[0m="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+[36mINFO[0m[2026-06-24 10:16:28] 请求成功                                          [36mip[0m="::1" [36mlatency[0m=3.8417ms [36mmethod[0m=GET [36mpath[0m=/tags/manage [36mstatus[0m=200 [36muser_agent[0m="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+time="2026-06-24 10:19:57" level=info msg="日志系统初始化完成levelinfoformattext"
+time="2026-06-24 10:19:57" level=info msg="SkyWalking 链路追踪已启用backend172.22.219.86:11800"
+time="2026-06-24 10:19:57" level=info msg="Redis连接成功"
+time="2026-06-24 10:19:57" level=info msg="服务启动成功port:8080"
+time="2026-06-24 10:20:02" level=info msg="请求成功" ip="::1" latency=9.3074ms method=GET path=/articles/list status=200 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+time="2026-06-24 10:20:04" level=info msg="请求成功" ip="::1" latency=5.1613ms method=GET path="/articles/list?tag=%E4%B8%96%E7%95%8C%E6%9D%AF" status=200 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+time="2026-06-24 10:20:06" level=info msg="请求成功" ip="::1" latency=4.2312ms method=GET path="/articles/list?tag=golang" status=200 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"

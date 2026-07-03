@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Elasticsearch - SkyWalking 数据存储后端
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: sw-es
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS="-Xms512m -Xmx512m"
+      - cluster.name=skywalking
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - skywalking
+
+  # OAP Server - SkyWalking 核心服务，接收 Agent 上报的链路数据
+  oap:
+    image: apache/skywalking-oap-server:9.7.0
+    container_name: sw-oap
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      SW_STORAGE: elasticsearch
+      SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+      SW_TELEMETRY: none
+      JAVA_OPTS: "-Xms512m -Xmx1024m"
+      # 开启 gRPC 接收（Go Agent 默认使用 gRPC 上报）
+      SW_RECEIVER_GRPC_DEFAULT_HOST: 0.0.0.0
+      SW_RECEIVER_GRPC_DEFAULT_PORT: 11800
+      # 开启 HTTP 接收（备用）
+      SW_RECEIVER_HTTP_DEFAULT_HOST: 0.0.0.0
+      SW_RECEIVER_HTTP_DEFAULT_PORT: 12800
+    ports:
+      - "11800:11800"   # gRPC 端口（Go Agent 上报链路数据使用此端口）
+      - "12800:12800"   # HTTP REST API 端口
+    networks:
+      - skywalking
+
+  # SkyWalking UI - Web 可视化界面
+  ui:
+    image: apache/skywalking-ui:9.7.0
+    container_name: sw-ui
+    depends_on:
+      - oap
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800
+      # 登录信息（可选）
+      SW_UI_LOGIN_ENABLED: false
+    ports:
+      - "8088:8080"     # UI 访问端口
+    networks:
+      - skywalking
+
+volumes:
+  es_data:
+
+networks:
+  skywalking:
+    driver: bridge

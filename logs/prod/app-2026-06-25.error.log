@@ -1,0 +1,3 @@
+{"approval_id":2,"level":"error","msg":"ApproveArticle panic 触发事务回滚","panic":"runtime error: invalid memory address or nil pointer dereference","time":"2026-06-25 15:25:51"}
+{"approval_id":2,"level":"error","msg":"ApproveArticle panic 触发事务回滚","panic":"runtime error: invalid memory address or nil pointer dereference","time":"2026-06-25 15:25:53"}
+{"approval_id":2,"level":"error","msg":"ApproveArticle panic 触发事务回滚","panic":"runtime error: invalid memory address or nil pointer dereference","time":"2026-06-25 15:26:11"}

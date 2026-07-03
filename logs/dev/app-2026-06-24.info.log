@@ -1,0 +1,13 @@
+time="2026-06-24 16:04:12" level=info msg="日志系统初始化完成levelinfoformattextenvdev"
+time="2026-06-24 16:04:12" level=info msg="SkyWalking 链路追踪已启用backend172.22.219.86:11800"
+time="2026-06-24 16:04:12" level=info msg="Redis连接成功"
+time="2026-06-24 16:04:12" level=info msg="服务启动成功port:8080"
+time="2026-06-24 16:04:53" level=info msg="日志系统初始化完成levelinfoformattextenvdev"
+time="2026-06-24 16:04:53" level=info msg="SkyWalking 链路追踪已启用backend172.22.219.86:11800"
+time="2026-06-24 16:04:53" level=info msg="Redis连接成功"
+time="2026-06-24 16:04:53" level=info msg="服务启动成功port:8080"
+time="2026-06-24 16:05:56" level=info msg="日志系统初始化完成levelinfoformattextenvdev"
+time="2026-06-24 16:05:56" level=info msg="SkyWalking 链路追踪已启用backend172.22.219.86:11800"
+time="2026-06-24 16:05:56" level=info msg="Redis连接成功"
+time="2026-06-24 16:05:56" level=info msg="服务启动成功port:8080"
+time="2026-06-24 16:06:05" level=info msg="请求重定向" ip="::1" latency=0s method=GET path=/home status=302 user_agent=curl/8.19.0

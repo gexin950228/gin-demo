@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章列表 - Gin Demo</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <style>
+        /* 页面特有样式 */
+        /* 页面标题 */
+        .page-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .create-btn {
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.3s;
+        }
+        .create-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(39,174,96,0.4); }
+
+        /* 标签筛选栏 */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.25rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .filter-bar label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        .tag-filter-select {
+            flex: 1;
+            max-width: 300px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            color: #495057;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .tag-filter-select:focus { border-color: #4a90e2; }
+
+        .clear-filter-btn {
+            padding: 0.45rem 1rem;
+            background: transparent;
+            color: #6c757d;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .clear-filter-btn:hover { background: #e9ecef; color: #495057; }
+
+        /* 文章卡片列表 */
+        .article-list { margin-top: 0.5rem; }
+
+        .article-card {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .article-card {
+            cursor: pointer;
+        }
+        .article-card:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            border-color: #4a90e2;
+        }
+
+        .article-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.6rem;
+        }
+        .article-title a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .article-title a:hover { color: #4a90e2; }
+
+        .article-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+            color: #868e96;
+            margin-bottom: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .article-meta span { display: flex; align-items: center; gap: 0.3rem; }
+
+        /* 文章标签 */
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .article-tag {
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            font-size: 0.78rem;
+            color: #4a90e2;
+            background: #eaf2fb;
+            border-radius: 12px;
+            border: 1px solid #c5ddf5;
+            font-weight: 500;
+        }
+
+        .article-excerpt {
+            color: #6c757d;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .article-footer {
+            margin-top: 1rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid #f1f3f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-buttons { display: flex; gap: 0.5rem; align-items: center; margin-left: auto; }
+        .delete-btn { }
+
+        .view-detail-btn, .edit-btn {
+            padding: 0.4rem 1.2rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .view-detail-btn {
+            background-color: transparent;
+            color: #4a90e2;
+            border: 1px solid #4a90e2;
+        }
+        .view-detail-btn:hover { background-color: #4a90e2; color: white; }
+
+        .edit-btn {
+            background-color: transparent;
+            color: #f39c12;
+            border: 1px solid #f39c12;
+        }
+        .edit-btn:hover { background-color: #f39c12; color: white; }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #adb5bd;
+        }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .empty-state-text { font-size: 1.1rem; margin-bottom: 1rem; }
+        .empty-state a { color: #4a90e2; text-decoration: none; font-weight: 600; }
+        .empty-state a:hover { text-decoration: underline; }
+
+        /* 分页控件 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .pagination-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-right: 1rem;
+        }
+        .page-btn {
+            min-width: 36px;
+            height: 36px;
+            padding: 0 0.6rem;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .page-btn:hover:not(:disabled) {
+            border-color: #4a90e2;
+            color: #4a90e2;
+        }
+        .page-btn.active {
+            background: #4a90e2;
+            border-color: #4a90e2;
+            color: white;
+            cursor: default;
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .page-ellipsis {
+            padding: 0 0.3rem;
+            color: #adb5bd;
+        }
+    </style>
+    <script>if(localStorage.getItem('sidebar_expanded')==='true')document.write('<style>.sidebar{width:220px}</style>');</script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{.url_home}}" class="navbar-brand">Gin Demo</a>
+        <div class="user-info">
+            <div class="user-dropdown">
+                <span class="user-name" onclick="toggleUserMenu()">
+                    <span class="user-avatar" id="navAvatar">
+                        {{if .avatar_url}}<img src="{{.avatar_url}}" alt="">{{else}}<span>{{slice .username 0 1}}</span>{{end}}
+                    </span>
+                    {{.username}} <span class="dropdown-arrow">&#9660;</span>
+                    <span class="approval-badge" id="approvalBadge" style="display:none;"></span>
+                </span>
+                <div class="dropdown-menu" id="userDropdownMenu">
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openAvatarModal()">
+                        &#128247; 修改头像
+                    </a>
+                    <a href="{{.url_approval_list}}" class="dropdown-item">
+                        &#9989; 我的审批
+                        <span class="badge-num" id="approvalBadgeNum"></span>
+                    </a>
+                    <a href="{{.url_logout}}" class="dropdown-item">&#128682; 退出登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像上传弹窗 -->
+    <div class="avatar-modal-mask" id="avatarModalMask" onclick="if(event.target===this)closeAvatarModal()">
+        <div class="avatar-modal">
+            <h3>修改头像</h3>
+            <div class="avatar-preview" id="avatarPreview">
+                <div class="avatar-preview-placeholder">点击下方按钮<br>选择图片</div>
+            </div>
+            <input type="file" class="avatar-file-input" id="avatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp">
+            <div class="avatar-modal-actions">
+                <button class="avatar-btn-cancel" onclick="closeAvatarModal()">取消</button>
+                <button class="avatar-btn-upload" id="avatarUploadBtn" onclick="uploadAvatar()" disabled>上传</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <button class="sidebar-toggle" id="sidebarToggle" title="展开导航" onclick="toggleSidebar()">&#9776;</button>
+        <div class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <div class="nav-header expanded active" onclick="toggleSubMenu(this)">
+                        <span><span class="tab-icon">&#128196;</span> 文章管理</span>
+                        <span class="arrow">&#9654;</span>
+                    </div>
+                    <ul class="nav-sub-menu show">
+                        <li><a href="{{.url_article_create}}">新增文章</a></li>
+                        <li><a href="{{.url_article_list}}" class="active">文章列表</a></li>
+                        <li><a href="{{.url_tag_manage}}">标签管理</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content-area">
+            <!-- 标签页栏（动态渲染） -->
+            <div class="tabs-container" id="tabsContainer"></div>
+
+            <!-- 内容区域 -->
+            <div class="tab-content">
+                <h1 class="page-title">
+                    <span>文章列表</span>
+                    <a href="{{.url_article_create}}" id="headerCreateBtn" class="create-btn">
+                        <span>&#43;</span> 新增文章
+                    </a>
+                </h1>
+
+                <!-- 标签筛选栏 -->
+                {{if .tags}}
+                <div class="filter-bar">
+                    <label>&#128278; 按标签筛选：</label>
+                    <select class="tag-filter-select" id="tagFilter" onchange="filterByTag(this.value)">
+                        <option value="">全部标签</option>
+                        {{range .tags}}
+                        <option value="{{.Name}}"{{if eq $.tag_filter .Name}} selected{{end}}>{{.Name}}</option>
+                        {{end}}
+                    </select>
+                    {{if .tag_filter}}
+                    <button class="clear-filter-btn" onclick="clearTagFilter()">清除筛选</button>
+                    {{end}}
+                </div>
+                {{end}}
+
+                {{if .articles}}
+                <div class="article-list" id="articleListContainer">
+                    {{range .articles}}
+                    <div class="article-card" data-article-id="{{.ID}}">
+                        <h3 class="article-title">
+                            <a href="{{$.url_article_view}}?id={{.ID}}">{{.Title}}</a>
+                        </h3>
+                        <div class="article-meta">
+                            <span>&#128100; {{.User.UserName}}</span>
+                            <span>&#128197; {{.CreatedAt.Format "2006-01-02 15:04"}}</span>
+                        </div>
+                        {{if .Tags}}
+                        <div class="article-tags">
+                            {{range .Tags}}
+                            <span class="article-tag">{{.Name}}</span>
+                            {{end}}
+                        </div>
+                        {{end}}
+                        <p class="article-excerpt">
+                            {{if gt (len .Content) 200}}
+                                {{slice .Content 0 200}}...
+                            {{else}}
+                                {{.Content}}
+                            {{end}}
+                        </p>
+                        <div class="article-footer">
+                            <div class="action-buttons">
+                                <a href="{{$.url_article_view}}?id={{.ID}}" class="view-detail-btn">查看详情</a>
+                                <a href="{{$.url_article_edit}}?id={{.ID}}" class="edit-btn">编辑</a>
+                                {{if eq .UserID $.user_id}}
+                                <button class="delete-btn" onclick="confirmDelete({{.ID}}, '{{.Title}}')">删除</button>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                <!-- 分页控件（首次渲染由服务端数据生成，AJAX 翻页/筛选用 JS 重新生成） -->
+                <div class="pagination" id="paginationContainer"
+                     data-page="{{.page}}" data-total-pages="{{.total_pages}}" data-total="{{.total}}" data-page-size="{{.page_size}}">
+                    <span class="pagination-info">共 {{.total}} 篇，第 {{.page}}/{{.total_pages}} 页</span>
+                    <button class="page-btn" onclick="loadArticles({{.page}} - 1)" {{if le .page 1}}disabled{{end}}>&#8249; 上一页</button>
+                    <span id="pageNumbers"></span>
+                    <button class="page-btn" onclick="loadArticles({{.page}} + 1)" {{if ge .page .total_pages}}disabled{{end}}>下一页 &#8250;</button>
+                </div>
+                {{else}}
+                <div class="empty-state" id="articleListContainer">
+                    <div class="empty-state-icon">&#128218;</div>
+                    <div class="empty-state-text">暂无文章</div>
+                    <p>点击上方按钮或<a href="{{.url_article_create}}?pre_tag={{.tag_filter}}" id="emptyCreateLink">立即创建第一篇文章</a></p>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script>window.AVATAR_UPLOAD_URL = '{{.url_avatar_upload}}';</script>
+    <script src="/static/js/layout.js"></script>
+    <script>
+        function toggleSubMenu(header) {
+            $(header).toggleClass('expanded');
+            $(header).siblings('.nav-sub-menu').toggleClass('show');
+            $('.nav-header').not($(header)).removeClass('active');
+            if ($(header).hasClass('expanded')) {
+                $(header).addClass('active');
+            }
+        }
+
+        // 注：toggleUserMenu / openAvatarModal / closeAvatarModal / uploadAvatar
+        //     以及 #avatarFileInput 的 change 事件已抽到 /static/js/layout.js
+
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var btn = document.getElementById('sidebarToggle');
+            if (sb.classList.contains('sidebar-expanded')) {
+                // 收起
+                sb.classList.remove('sidebar-expanded');
+                btn.innerHTML = '&#9776;';
+                btn.title = '展开导航';
+                btn.style.left = '0';
+                localStorage.setItem('sidebar_expanded', 'false');
+            } else {
+                // 展开
+                sb.classList.add('sidebar-expanded');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+                localStorage.setItem('sidebar_expanded', 'true');
+            }
+        }
+
+        // ========== 标签页持久化管理系统 ==========
+        var CURRENT_PAGE_TAB = {
+            url: '{{.url_article_list}}',
+            title: '文章列表',
+            icon: '&#128220;',
+            closable: true
+        };
+
+        // 已知标签页注册表（侧边栏导航点击时自动识别）
+        var TAB_REGISTRY = {};
+        TAB_REGISTRY['{{.url_home}}']         = { title: '首页',     icon: '&#127968;', closable: false };
+        TAB_REGISTRY['{{.url_article_create}}'] = { title: '新增文章', icon: '&#9998;',   closable: true };
+        TAB_REGISTRY['{{.url_article_list}}']  = { title: '文章列表', icon: '&#128220;',  closable: true };
+        TAB_REGISTRY['{{.url_tag_manage}}']   = { title: '标签管理', icon: '&#128295;',  closable: true };
+
+        function getOpenTabs() {
+            try { return JSON.parse(localStorage.getItem('open_tabs') || '[]'); } catch(e) { return []; }
+        }
+        function saveOpenTabs(tabs) {
+            localStorage.setItem('open_tabs', JSON.stringify(tabs));
+        }
+
+        // 确保当前页面标签在列表中
+        function ensureCurrentTab(tabs) {
+            var url = CURRENT_PAGE_TAB.url;
+            var exists = tabs.some(function(t) { return t.url === url; });
+            if (!exists) {
+                tabs.push({
+                    url: url,
+                    title: CURRENT_PAGE_TAB.title,
+                    icon: CURRENT_PAGE_TAB.icon,
+                    closable: CURRENT_PAGE_TAB.closable
+                });
+            }
+            return tabs;
+        }
+
+        // 渲染标签页栏
+        function renderTabs() {
+            var $container = $('#tabsContainer');
+            $container.empty();
+
+            var tabs = getOpenTabs();
+            tabs = ensureCurrentTab(tabs);
+            saveOpenTabs(tabs);
+
+            var currentUrl = CURRENT_PAGE_TAB.url;
+
+            for (var i = 0; i < tabs.length; i++) {
+                var tab = tabs[i];
+                var isActive = (tab.url === currentUrl) ? ' active' : '';
+                var closeHtml = tab.closable ? '<span class="tab-close" onclick="closeTab(event, this)">&times;</span>' : '';
+
+                var $a = $('<a href="' + tab.url + '" class="tab-item' + isActive + '">' +
+                    '<span class="tab-icon">' + tab.icon + '</span>' +
+                    '<span>' + tab.title + '</span>' +
+                    closeHtml + '</a>');
+                $container.append($a);
+            }
+        }
+
+        function closeTab(event, element) {
+            event.preventDefault();
+            event.stopPropagation();
+            var $tab = $(element).closest('.tab-item');
+            var closeUrl = $tab.attr('href');
+            var isActive = $tab.hasClass('active');
+
+            // 从 localStorage 移除
+            var tabs = getOpenTabs();
+            tabs = tabs.filter(function(t) { return t.url !== closeUrl; });
+            saveOpenTabs(tabs);
+
+            if (isActive) {
+                // 关闭当前页：跳转到剩余第一个标签
+                if (tabs.length > 0) {
+                    window.location.href = tabs[0].url;
+                } else {
+                    window.location.href = '{{.url_home}}';
+                }
+            } else {
+                // 关闭非当前页：重新渲染即可
+                renderTabs();
+            }
+        }
+
+        // 侧边栏导航拦截：点击前先注册目标标签
+        function interceptNavClick(url) {
+            if (TAB_REGISTRY[url]) {
+                var info = TAB_REGISTRY[url];
+                var tabs = getOpenTabs();
+                var exists = tabs.some(function(t) { return t.url === url; });
+                if (!exists) {
+                    tabs.push({ url: url, title: info.title, icon: info.icon, closable: info.closable });
+                    saveOpenTabs(tabs);
+                }
+            }
+        }
+
+        function filterByTag(tagName) {
+            loadArticles(1, tagName);
+        }
+
+        // 加载指定页文章（AJAX，不刷新整页）
+        function loadArticles(page, tagName) {
+            if (page < 1) page = 1;
+            // tagName 优先使用传入参数，否则读当前筛选框
+            var tag = (typeof tagName !== 'undefined') ? tagName : ($('#tagFilter').val() || '');
+            var apiUrl = '{{.url_article_list_api}}';
+            var params = 'page=' + page;
+            if (tag) params += '&tag=' + encodeURIComponent(tag);
+
+            // 显示加载状态
+            $('#articleListContainer').html('<div style="text-align:center;padding:2rem;color:#999;">加载中...</div>');
+
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                data: params,
+                success: function(resp) {
+                    renderArticleList(resp.articles, resp.user_id, tag);
+                    renderPagination(resp.page, resp.total_pages, resp.total, resp.page_size);
+                    // 有标签时显示清除按钮，无标签时隐藏
+                    if (tag) {
+                        if ($('.clear-filter-btn').length === 0) {
+                            $('#tagFilter').after('<button class="clear-filter-btn" onclick="clearTagFilter()">清除筛选</button>');
+                        } else {
+                            $('.clear-filter-btn').show();
+                        }
+                    } else {
+                        $('.clear-filter-btn').hide();
+                    }
+                    // 滚动到顶部，方便看新页
+                    $('.tab-content').scrollTop(0);
+                },
+                error: function() {
+                    $('#articleListContainer').html('<div style="text-align:center;padding:2rem;color:#e74c3c;">加载失败，请重试</div>');
+                }
+            });
+        }
+
+        // 渲染分页控件
+        function renderPagination(page, totalPages, total, pageSize) {
+            var $container = $('#paginationContainer');
+            if (!$container.length) {
+                // 首次进入是空状态，分页容器不存在，需要创建
+                $('.tab-content > .empty-state').after(
+                    '<div class="pagination" id="paginationContainer"></div>'
+                );
+                $container = $('#paginationContainer');
+            }
+            if (total === 0) {
+                $container.hide();
+                return;
+            }
+            $container.show();
+
+            // 生成页码按钮（带省略号）
+            var pageNumbersHtml = '';
+            var pages = getPageList(page, totalPages);
+            for (var i = 0; i < pages.length; i++) {
+                var p = pages[i];
+                if (p === '...') {
+                    pageNumbersHtml += '<span class="page-ellipsis">...</span>';
+                } else {
+                    var cls = (p === page) ? ' page-btn active' : ' page-btn';
+                    pageNumbersHtml += '<button class="' + cls.trim() + '" onclick="loadArticles(' + p + ')">' + p + '</button>';
+                }
+            }
+
+            var prevDisabled = (page <= 1) ? 'disabled' : '';
+            var nextDisabled = (page >= totalPages) ? 'disabled' : '';
+
+            $container.attr('data-page', page).attr('data-total-pages', totalPages).attr('data-total', total);
+            $container.html(
+                '<span class="pagination-info">共 ' + total + ' 篇，第 ' + page + '/' + totalPages + ' 页</span>' +
+                '<button class="page-btn" onclick="loadArticles(' + (page - 1) + ')" ' + prevDisabled + '>&#8249; 上一页</button>' +
+                pageNumbersHtml +
+                '<button class="page-btn" onclick="loadArticles(' + (page + 1) + ')" ' + nextDisabled + '>下一页 &#8250;</button>'
+            );
+        }
+
+        // 计算要显示的页码列表（最多显示 7 个，超出用省略号）
+        function getPageList(current, total) {
+            var result = [];
+            if (total <= 7) {
+                for (var i = 1; i <= total; i++) result.push(i);
+                return result;
+            }
+            result.push(1);
+            var start = Math.max(2, current - 1);
+            var end = Math.min(total - 1, current + 1);
+            if (start > 2) result.push('...');
+            for (var j = start; j <= end; j++) result.push(j);
+            if (end < total - 1) result.push('...');
+            result.push(total);
+            return result;
+        }
+
+        // 动态渲染文章列表
+        function renderArticleList(articles, userID, tagFilter) {
+            var urlView = '{{.url_article_view}}';
+            var urlEdit = '{{.url_article_edit}}';
+            var urlCreate = '{{.url_article_create}}';
+            var $container = $('#articleListContainer');
+
+            if (!articles || articles.length === 0) {
+                var createLink = urlCreate;
+                if (tagFilter) createLink += '?pre_tag=' + encodeURIComponent(tagFilter);
+                $container.removeClass('article-list').addClass('empty-state');
+                $container.html(
+                    '<div class="empty-state-icon">&#128218;</div>' +
+                    '<div class="empty-state-text">暂无文章</div>' +
+                    '<p>点击上方按钮或<a href="' + createLink + '" id="emptyCreateLink">立即创建第一篇文章</a></p>'
+                );
+                return;
+            }
+
+            $container.removeClass('empty-state').addClass('article-list');
+            var html = '';
+            for (var i = 0; i < articles.length; i++) {
+                var a = articles[i];
+                // 内容截断
+                var excerpt = a.content;
+                if (excerpt.length > 200) excerpt = excerpt.substring(0, 200) + '...';
+
+                // 时间格式化
+                var dt = new Date(a.created_at);
+                var dateStr = dt.getFullYear() + '-' +
+                    String(dt.getMonth()+1).padStart(2,'0') + '-' +
+                    String(dt.getDate()).padStart(2,'0') + ' ' +
+                    String(dt.getHours()).padStart(2,'0') + ':' +
+                    String(dt.getMinutes()).padStart(2,'0');
+
+                // 标签
+                var tagsHtml = '';
+                if (a.tags && a.tags.length > 0) {
+                    tagsHtml = '<div class="article-tags">';
+                    for (var j = 0; j < a.tags.length; j++) {
+                        tagsHtml += '<span class="article-tag">' + escapeHtml(a.tags[j].name) + '</span>';
+                    }
+                    tagsHtml += '</div>';
+                }
+
+                // 删除按钮（仅作者可见）
+                var deleteBtn = '';
+                if (a.user_id === userID) {
+                    deleteBtn = '<button class="delete-btn" onclick="confirmDelete(' + a.ID + ', \'' + escapeHtml(a.title).replace(/'/g, "\\'") + '\')">删除</button>';
+                }
+
+                html +=
+                    '<div class="article-card" data-article-id="' + a.ID + '">' +
+                        '<h3 class="article-title"><a href="' + urlView + '?id=' + a.ID + '">' + escapeHtml(a.title) + '</a></h3>' +
+                        '<div class="article-meta">' +
+                            '<span>&#128100; ' + escapeHtml(a.user.user_name) + '</span>' +
+                            '<span>&#128197; ' + dateStr + '</span>' +
+                        '</div>' +
+                        tagsHtml +
+                        '<p class="article-excerpt">' + escapeHtml(excerpt) + '</p>' +
+                        '<div class="article-footer"><div class="action-buttons">' +
+                            '<a href="' + urlView + '?id=' + a.ID + '" class="view-detail-btn">查看详情</a>' +
+                            '<a href="' + urlEdit + '?id=' + a.ID + '" class="edit-btn">编辑</a>' +
+                            deleteBtn +
+                        '</div></div>' +
+                    '</div>';
+            }
+            $container.html(html);
+        }
+
+        // HTML 转义防 XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // 清除标签筛选（AJAX，不刷新页面）
+        function clearTagFilter() {
+            $('#tagFilter').val('');  // 重置下拉框
+            filterByTag('');          // 重新加载全部文章
+            // 隐藏清除按钮
+            $('.clear-filter-btn').hide();
+        }
+
+        // 切换标签筛选时同步更新"+ 新增文章"按钮链接
+        $('#tagFilter').on('change', function() {
+            var tag = $(this).val();
+            var $btn = $('#headerCreateBtn');
+            var baseHref = '{{.url_article_create}}';
+            if (tag) {
+                $btn.attr('href', baseHref + '?pre_tag=' + encodeURIComponent(tag));
+            } else {
+                $btn.attr('href', baseHref);
+            }
+        });
+
+        $(document).ready(function() {
+            // 点击文章卡片空白处跳转详情页（点卡片内的链接/按钮不触发）
+            var viewUrl = '{{.url_article_view}}';
+            $('#articleListContainer').on('click', '.article-card', function(e) {
+                // 点击源是链接或按钮则不处理，由元素自身行为生效
+                if ($(e.target).closest('a, button').length) return;
+                var id = $(this).data('article-id');
+                if (id) {
+                    window.location.href = viewUrl + '?id=' + id;
+                }
+            });
+            // 恢复侧边栏状态
+            if (localStorage.getItem('sidebar_expanded') === 'true') {
+                document.getElementById('sidebar').classList.add('sidebar-expanded');
+                var btn = document.getElementById('sidebarToggle');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+            }
+
+            // 渲染持久化标签页
+            renderTabs();
+
+            // 高亮当前导航项
+            var currentPath = window.location.pathname;
+            $('.nav-sub-menu a').each(function() {
+                if ($(this).attr('href') === currentPath) {
+                    $(this).addClass('active');
+                    $(this).closest('.nav-sub-menu').addClass('show')
+                           .siblings('.nav-header').addClass('expanded active');
+                }
+            });
+
+            // 右上角"+ 新增文章"按钮带上当前筛选标签
+            var tagFilter = $('#tagFilter').val();
+            if (tagFilter) {
+                var $btn = $('#headerCreateBtn');
+                $btn.attr('href', $btn.attr('href') + '?pre_tag=' + encodeURIComponent(tagFilter));
+            }
+
+            // 没有选标签时，清理"立即创建"链接的 pre_tag 参数
+            var $emptyLink = $('#emptyCreateLink');
+            if ($emptyLink.length && $emptyLink.attr('href').indexOf('pre_tag=') >= 0) {
+                var href = $emptyLink.attr('href');
+                if (href.indexOf('=') === href.length - 1 || href.endsWith('pre_tag=')) {
+                    $emptyLink.attr('href', '{{.url_article_create}}');
+                }
+            }
+
+            // 拦截侧边栏导航点击，先注册目标标签再跳转
+            $('.nav-sub-menu a').on('click', function() {
+                interceptNavClick($(this).attr('href'));
+            });
+
+            // 渲染完整分页按钮（首次进入页面，基于服务端数据）
+            var $pg = $('#paginationContainer');
+            if ($pg.length) {
+                var initPage = parseInt($pg.attr('data-page'), 10) || 1;
+                var initTotalPages = parseInt($pg.attr('data-total-pages'), 10) || 1;
+                var initTotal = parseInt($pg.attr('data-total'), 10) || 0;
+                var initPageSize = parseInt($pg.attr('data-page-size'), 10) || 10;
+                if (initTotal > 0) {
+                    renderPagination(initPage, initTotalPages, initTotal, initPageSize);
+                }
+            }
+        });
+    </script>
+
+    <!-- 删除确认弹窗 -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-title">确认删除</div>
+            <div class="modal-body" id="deleteModalBody"></div>
+            <div class="modal-actions">
+                <button class="modal-btn-cancel" onclick="closeDeleteModal()">取消</button>
+                <button class="modal-btn-confirm" id="deleteConfirmBtn">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var deleteArticleId = null;
+
+        function confirmDelete(id, title) {
+            deleteArticleId = id;
+            $('#deleteModalBody').text('确定要删除文章「' + title + '」吗？删除后可在数据库恢复。');
+            $('#deleteModal').addClass('show');
+        }
+
+        function closeDeleteModal() {
+            $('#deleteModal').removeClass('show');
+            deleteArticleId = null;
+        }
+
+        $('#deleteConfirmBtn').on('click', function() {
+            if (!deleteArticleId) return;
+            $.ajax({
+                url: '{{.url_article_delete}}',
+                type: 'POST',
+                data: { id: deleteArticleId },
+                success: function(res) {
+                    closeDeleteModal();
+                    // 移除对应文章卡片
+                    $('.article-card').each(function() {
+                        if ($(this).find('.delete-btn').attr('onclick').indexOf(deleteArticleId + ',') >= 0) {
+                            $(this).fadeOut(300, function() { $(this).remove(); });
+                            // 检查是否还有文章，没有则重新加载当前页（可能整页删空了）
+                            setTimeout(function() {
+                                if ($('.article-card').length === 0) {
+                                    // 读取当前页码，若当前页已空则尝试上一页
+                                    var curPage = parseInt($('#paginationContainer').attr('data-page'), 10) || 1;
+                                    var tag = $('#tagFilter').val() || '';
+                                    // 先尝试当前页，若返回空且非第一页则自动退一页
+                                    $.ajax({
+                                        url: '{{.url_article_list_api}}',
+                                        type: 'GET',
+                                        data: 'page=' + curPage + (tag ? '&tag=' + encodeURIComponent(tag) : ''),
+                                        success: function(resp) {
+                                            if ((!resp.articles || resp.articles.length === 0) && curPage > 1) {
+                                                loadArticles(curPage - 1, tag);
+                                            } else {
+                                                renderArticleList(resp.articles, resp.user_id, tag);
+                                                renderPagination(resp.page, resp.total_pages, resp.total, resp.page_size);
+                                            }
+                                        }
+                                    });
+                                }
+                            }, 350);
+                        }
+                    });
+                },
+                error: function(xhr) {
+                    var msg = xhr.responseJSON ? xhr.responseJSON.error : '删除失败';
+                    alert(msg);
+                    closeDeleteModal();
+                }
+            });
+        });
+
+        // 点击遮罩层关闭
+        $('#deleteModal').on('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    </script>
+</body>
+</html>

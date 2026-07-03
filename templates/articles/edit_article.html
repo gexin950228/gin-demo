@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑文章 - Gin Demo</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <style>
+        /* 页面特有样式 */
+        /* 表单样式 */
+        .form-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .form-group { margin-bottom: 1.5rem; }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .form-textarea { resize: vertical; min-height: 200px; }
+
+        /* 标签选择器 */
+        .tag-selector { position: relative; }
+
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 6px;
+            min-height: 44px;
+            cursor: text;
+            transition: border-color 0.2s;
+            align-items: center;
+        }
+        .tag-input-container:focus-within { border-color: #4a90e2; }
+
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.55rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        .selected-tag .remove-tag {
+            cursor: pointer;
+            opacity: 0.8;
+            font-size: 0.9rem;
+            line-height: 1;
+            margin-left: 2px;
+        }
+        .selected-tag .remove-tag:hover { opacity: 1; }
+
+        .tag-typeahead {
+            flex: 1;
+            min-width: 120px;
+            border: none;
+            outline: none;
+            font-size: 0.92rem;
+            padding: 0.15rem;
+            background: transparent;
+        }
+
+        .existing-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.5rem;
+        }
+
+        .existing-tag-item {
+            padding: 0.2rem 0.55rem;
+            font-size: 0.78rem;
+            color: #495057;
+            background: #f1f3f5;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .existing-tag-item:hover {
+            background: #eaf2fb;
+            border-color: #4a90e2;
+            color: #4a90e2;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .submit-btn {
+            padding: 0.875rem 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+
+        .cancel-btn {
+            padding: 0.875rem 2.5rem;
+            background: transparent;
+            color: #6c757d;
+            border: 2px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .cancel-btn:hover { background: #f8f9fa; border-color: #adb5bd; }
+    </style>
+    <script>
+        if(localStorage.getItem('sidebar_expanded')==='true')document.write('<style>.sidebar{width:220px}</style>');
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{.url_home}}" class="navbar-brand">Gin Demo</a>
+        <div class="user-info">
+            <div class="user-dropdown">
+                <span class="user-name" onclick="toggleUserMenu()">
+                    <span class="user-avatar" id="navAvatar">
+                        {{if .avatar_url}}<img src="{{.avatar_url}}" alt="">{{else}}<span>{{slice .username 0 1}}</span>{{end}}
+                    </span>
+                    {{.username}} <span class="dropdown-arrow">&#9660;</span>
+                    <span class="approval-badge" id="approvalBadge" style="display:none;"></span>
+                </span>
+                <div class="dropdown-menu" id="userDropdownMenu">
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openAvatarModal()">
+                        &#128247; 修改头像
+                    </a>
+                    <a href="{{.url_approval_list}}" class="dropdown-item">
+                        &#9989; 我的审批
+                        <span class="badge-num" id="approvalBadgeNum"></span>
+                    </a>
+                    <a href="{{.url_logout}}" class="dropdown-item">&#128682; 退出登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像上传弹窗 -->
+    <div class="avatar-modal-mask" id="avatarModalMask" onclick="if(event.target===this)closeAvatarModal()">
+        <div class="avatar-modal">
+            <h3>修改头像</h3>
+            <div class="avatar-preview" id="avatarPreview">
+                <div class="avatar-preview-placeholder">点击下方按钮<br>选择图片</div>
+            </div>
+            <input type="file" class="avatar-file-input" id="avatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp">
+            <div class="avatar-modal-actions">
+                <button class="avatar-btn-cancel" onclick="closeAvatarModal()">取消</button>
+                <button class="avatar-btn-upload" id="avatarUploadBtn" onclick="uploadAvatar()" disabled>上传</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <button class="sidebar-toggle" id="sidebarToggle" title="展开导航" onclick="toggleSidebar()">&#9776;</button>
+        <div class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <div class="nav-header expanded active" onclick="toggleSubMenu(this)">
+                        <span><span class="tab-icon">&#128196;</span> 文章管理</span>
+                        <span class="arrow">&#9654;</span>
+                    </div>
+                    <ul class="nav-sub-menu show">
+                        <li><a href="{{.url_article_create}}">新增文章</a></li>
+                        <li><a href="{{.url_article_list}}">文章列表</a></li>
+                        <li><a href="{{.url_tag_manage}}">标签管理</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content-area">
+            <!-- 标签页栏（动态渲染） -->
+            <div class="tabs-container" id="tabsContainer"></div>
+
+            <!-- 内容区域 -->
+            <div class="tab-content">
+                <h1 class="form-title">编辑文章</h1>
+
+                <form action="{{.url_article_edit}}" method="POST" id="articleForm">
+                    <input type="hidden" name="id" value="{{.article.ID}}">
+                    <div id="tagsInputContainer"></div>
+
+                    <div class="form-group">
+                        <label class="form-label">文章标题</label>
+                        <input type="text" name="title" required class="form-input"
+                               value="{{.article.Title}}"
+                               placeholder="请输入文章标题">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">文章内容</label>
+                        <textarea name="content" required rows="10" class="form-textarea" placeholder="请输入文章内容">{{.article.Content}}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">标签（点击已有标签或输入自定义，回车添加）</label>
+                        <div class="tag-selector">
+                            <div class="tag-input-container" id="tagContainer" onclick="$('#tagTypeahead').focus()">
+                                <input type="text" id="tagTypeahead" class="tag-typeahead"
+                                       placeholder="输入标签名后按回车..." autocomplete="off">
+                            </div>
+                            {{if .tags}}
+                            <div class="existing-tags">
+                                <span style="font-size: 0.78rem; color: #adb5bd; line-height: 24px;">已有：</span>
+                                {{range .tags}}
+                                <span class="existing-tag-item" onclick="addTag('{{.Name}}')">{{.Name}}</span>
+                                {{end}}
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="submit" class="submit-btn">{{if .is_author}}保存修改{{else}}提交修改{{end}}</button>
+                        <a href="{{.url_article_view}}" class="cancel-btn">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script>window.AVATAR_UPLOAD_URL = '{{.url_avatar_upload}}';</script>
+    <script src="/static/js/layout.js"></script>
+    <script>
+        // 初始化已选标签（从服务端传入）
+        var selectedTags = [
+            {{range $i, $t := .article.Tags}}{{if gt $i 0}},{{end}}"{{$t.Name}}"{{end}}
+        ];
+
+        function addTag(name) {
+            name = name.trim();
+            if (!name || selectedTags.indexOf(name) >= 0) return;
+
+            selectedTags.push(name);
+            renderTags();
+            $('#tagTypeahead').val('').focus();
+        }
+
+        function removeTag(name) {
+            var idx = selectedTags.indexOf(name);
+            if (idx >= 0) {
+                selectedTags.splice(idx, 1);
+                renderTags();
+            }
+        }
+
+        function renderTags() {
+            var $container = $('#tagContainer');
+            $container.find('.selected-tag').remove();
+
+            selectedTags.forEach(function(tag) {
+                var $el = $('<span class="selected-tag">' +
+                    '<span>' + tag + '</span>' +
+                    '<span class="remove-tag" onclick="removeTag(\'' + tag + '\')">&times;</span></span>');
+                $container.find('#tagTypeahead').before($el);
+            });
+
+            // 生成多个同名 hidden input，确保 PostFormArray 正确拆分
+            var $inputContainer = $('#tagsInputContainer');
+            $inputContainer.empty();
+            selectedTags.forEach(function(tag) {
+                $inputContainer.append('<input type="hidden" name="tags" value="' + tag + '">');
+            });
+        }
+
+        // 初始渲染已选标签（直接调用，不依赖 ready；SPA 加载时 DOM 已注入）
+        renderTags();
+
+        $(document).ready(function() {
+            // 回车添加标签
+            $('#tagTypeahead').on('keydown', function(e) {
+                if (e.keyCode === 13 || e.which === 13) {
+                    e.preventDefault();
+                    var val = $(this).val().trim();
+                    if (val) addTag(val);
+                } else if (e.keyCode === 8 && !$(this).val()) {
+                    if (selectedTags.length > 0) {
+                        removeTag(selectedTags[selectedTags.length - 1]);
+                    }
+                }
+            });
+
+            // 提交前确保 tags 字段已更新
+            $('#articleForm').on('submit', function() {
+                renderTags();
+            });
+        });
+
+        function toggleSubMenu(header) {
+            $(header).toggleClass('expanded');
+            $(header).siblings('.nav-sub-menu').toggleClass('show');
+            $('.nav-header').not($(header)).removeClass('active');
+            if ($(header).hasClass('expanded')) { $(header).addClass('active'); }
+        }
+
+        // 侧边栏展开/收起（inline onclick 调用）
+        // 注：toggleUserMenu / openAvatarModal / closeAvatarModal / uploadAvatar
+        //     以及 #avatarFileInput 的 change 事件已抽到 /static/js/layout.js
+
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var btn = document.getElementById('sidebarToggle');
+            if (sb.classList.contains('sidebar-expanded')) {
+                sb.classList.remove('sidebar-expanded');
+                btn.innerHTML = '&#9776;';
+                btn.title = '展开导航';
+                btn.style.left = '0';
+                localStorage.setItem('sidebar_expanded', 'false');
+            } else {
+                sb.classList.add('sidebar-expanded');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+                localStorage.setItem('sidebar_expanded', 'true');
+            }
+        }
+
+        // ========== 标签页持久化管理系统 ==========
+        var CURRENT_PAGE_TAB = {
+            url: window.location.pathname + window.location.search,
+            title: '编辑文章',
+            icon: '&#9997;',
+            closable: true
+        };
+
+        var TAB_REGISTRY = {};
+        TAB_REGISTRY['{{.url_home}}']         = { title: '首页',     icon: '&#127968;', closable: false };
+        TAB_REGISTRY['{{.url_article_create}}'] = { title: '新增文章', icon: '&#9998;',   closable: true };
+        TAB_REGISTRY['{{.url_article_list}}']  = { title: '文章列表', icon: '&#128220;',  closable: true };
+        TAB_REGISTRY['{{.url_tag_manage}}']   = { title: '标签管理', icon: '&#128295;',  closable: true };
+
+        function getOpenTabs() {
+            try { return JSON.parse(localStorage.getItem('open_tabs') || '[]'); } catch(e) { return []; }
+        }
+        function saveOpenTabs(tabs) { localStorage.setItem('open_tabs', JSON.stringify(tabs)); }
+
+        function ensureCurrentTab(tabs) {
+            var url = CURRENT_PAGE_TAB.url;
+            if (!tabs.some(function(t) { return t.url === url; })) {
+                tabs.push({ url: url, title: CURRENT_PAGE_TAB.title, icon: CURRENT_PAGE_TAB.icon, closable: CURRENT_PAGE_TAB.closable });
+            }
+            return tabs;
+        }
+
+        function renderTabs() {
+            var $container = $('#tabsContainer'); $container.empty();
+            var tabs = getOpenTabs(); tabs = ensureCurrentTab(tabs); saveOpenTabs(tabs);
+            var currentUrl = CURRENT_PAGE_TAB.url;
+            for (var i = 0; i < tabs.length; i++) {
+                var tab = tabs[i];
+                var isActive = (tab.url === currentUrl) ? ' active' : '';
+                var closeHtml = tab.closable ? '<span class="tab-close" onclick="closeTab(event, this)">&times;</span>' : '';
+                $container.append('<a href="' + tab.url + '" class="tab-item' + isActive + '">' +
+                    '<span class="tab-icon">' + tab.icon + '</span><span>' + tab.title + '</span>' + closeHtml + '</a>');
+            }
+        }
+
+        function closeTab(event, element) {
+            event.preventDefault(); event.stopPropagation();
+            var $tab = $(element).closest('.tab-item');
+            var closeUrl = $tab.attr('href');
+            var isActive = $tab.hasClass('active');
+            var tabs = getOpenTabs();
+            tabs = tabs.filter(function(t) { return t.url !== closeUrl; });
+            saveOpenTabs(tabs);
+            if (isActive) {
+                window.location.href = tabs.length > 0 ? tabs[0].url : '{{.url_home}}';
+            } else { renderTabs(); }
+        }
+
+        function interceptNavClick(url) {
+            if (TAB_REGISTRY[url]) {
+                var info = TAB_REGISTRY[url];
+                var tabs = getOpenTabs();
+                if (!tabs.some(function(t) { return t.url === url; })) {
+                    tabs.push({ url: url, title: info.title, icon: info.icon, closable: info.closable });
+                    saveOpenTabs(tabs);
+                }
+            }
+        }
+
+        $(document).ready(function() {
+            // 恢复侧边栏状态
+            if (localStorage.getItem('sidebar_expanded') === 'true') {
+                document.getElementById('sidebar').classList.add('sidebar-expanded');
+                var btn = document.getElementById('sidebarToggle');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+            }
+
+            renderTabs();
+            var currentPath = window.location.pathname;
+            $('.nav-sub-menu a').each(function() {
+                if ($(this).attr('href') === currentPath) {
+                    $(this).addClass('active');
+                    $(this).closest('.nav-sub-menu').addClass('show')
+                           .siblings('.nav-header').addClass('expanded active');
+                }
+            });
+            $('.nav-sub-menu a').on('click', function() { interceptNavClick($(this).attr('href')); });
+        });
+    </script>
+</body>
+</html>

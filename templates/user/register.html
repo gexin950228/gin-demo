@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册 - Gin Demo</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .register-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 520px;
+            max-width: 90%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            padding-right: 2.5rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 输入框状态样式 */
+        input.valid {
+            border-color: #27ae60 !important;
+        }
+
+        input.invalid {
+            border-color: #e74c3c !important;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            font-size: 1.1rem;
+            display: none;
+        }
+
+        .input-icon.show {
+            display: block;
+        }
+
+        .input-icon.valid { color: #27ae60; }
+        .input-icon.invalid { color: #e74c3c; }
+
+        .validate-msg {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .validate-msg.show { display: block; }
+        .validate-msg.valid { color: #27ae60; }
+        .validate-msg.invalid { color: #e74c3c; }
+
+        /* 密码强度指示器 */
+        .password-strength {
+            margin-top: 6px;
+        }
+
+        .strength-bar-bg {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .strength-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .strength-weak { width: 33%; background: #e74c3c; }
+        .strength-medium { width: 66%; background: #f39c12; }
+        .strength-strong { width: 100%; background: #27ae60; }
+
+        .strength-text {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .strength-weak-text { color: #e74c3c; }
+        .strength-medium-text { color: #f39c12; }
+        .strength-strong-text { color: #27ae60; }
+
+        /* 密码规则提示 */
+        .password-rules {
+            margin-top: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.82rem;
+        }
+
+        .password-rules ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .password-rules li {
+            padding: 3px 0;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .password-rules li::before {
+            content: "○ ";
+            margin-right: 5px;
+        }
+
+        .password-rules li.passed {
+            color: #27ae60;
+        }
+
+        .password-rules li.passed::before {
+            content: "● ";
+        }
+
+        .verify-code-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .verify-code-group input {
+            flex: 1;
+        }
+
+        .send-code-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        .send-code-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+
+        .send-code-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        button[type="submit"]:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(102,126,234,0.4);
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h1>用户注册</h1>
+        <form id="registerForm" action="{{.url_register}}" method="POST">
+            <!-- 用户名 -->
+            <div class="form-group" id="usernameGroup">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required placeholder="请输入用户名（3-20位）">
+                <span class="input-icon valid" id="usernameIconValid">&#10003;</span>
+                <span class="input-icon invalid" id="usernameIconInvalid">&#10007;</span>
+                <div class="validate-msg" id="usernameMsg"></div>
+            </div>
+
+            <!-- 邮箱 -->
+            <div class="form-group" id="emailGroup">
+                <label for="email">邮箱地址</label>
+                <input type="email" id="email" name="email" required placeholder="请输入有效的邮箱地址">
+                <span class="input-icon valid" id="emailIconValid">&#10003;</span>
+                <span class="input-icon invalid" id="emailIconInvalid">&#10007;</span>
+                <div class="validate-msg" id="emailMsg"></div>
+            </div>
+
+            <!-- 验证码 -->
+            <div class="form-group">
+                <label for="verify_code">邮箱验证码</label>
+                <div class="verify-code-group">
+                    <input type="text" id="verify_code" name="verify_code" required placeholder="请输入6位验证码" maxlength="6">
+                    <button type="button" id="sendCodeBtn" class="send-code-btn">发送验证码</button>
+                </div>
+                <div id="codeMsg" style="font-size: 0.85rem; margin-top: 4px;"></div>
+            </div>
+
+            <!-- 密码 -->
+            <div class="form-group" id="passwordGroup">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required placeholder="请设置密码（至少8位）">
+
+                <!-- 密码强度指示器 -->
+                <div class="password-strength" id="passwordStrength" style="display:none;">
+                    <div class="strength-bar-bg">
+                        <div class="strength-bar-fill" id="strengthBarFill"></div>
+                    </div>
+                    <div class="strength-text" id="strengthText"></div>
+                </div>
+
+                <!-- 密码规则提示 -->
+                <div class="password-rules" id="passwordRules">
+                    <ul>
+                        <li id="ruleLength">至少8个字符</li>
+                        <li id="ruleUpper">包含大写字母 (A-Z)</li>
+                        <li id="ruleLower">包含小写字母 (a-z)</li>
+                        <li id="ruleNumber">包含数字 (0-9)</li>
+                        <li id="ruleSpecial">包含特殊字符 (!@#$%^&*)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 确认密码 -->
+            <div class="form-group" id="confirmPasswordGroup">
+                <label for="confirm_password">确认密码</label>
+                <input type="password" id="confirm_password" name="confirm_password" required placeholder="请再次输入密码">
+                <span class="input-icon valid" id="confirmIconValid">&#10003;</span>
+                <span class="input-icon invalid" id="confirmIconInvalid">&#10007;</span>
+                <div class="validate-msg" id="confirmMsg"></div>
+            </div>
+
+            <button type="submit" id="submitBtn">注册</button>
+        </form>
+
+        <div class="link">
+            已有账号？<a href="{{.url_login}}">立即登录</a>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script>
+        $(document).ready(function() {
+
+            // ========== 工具函数 ==========
+            
+            // 显示字段验证状态
+            function showFieldStatus(fieldId, isValid, message) {
+                const $input = $('#' + fieldId);
+                const $iconValid = $('#' + fieldId + 'IconValid');
+                const $iconInvalid = $('#' + fieldId + 'IconInvalid');
+                const $msg = $('#' + fieldId + 'Msg');
+
+                $input.removeClass('valid invalid');
+                $iconValid.removeClass('show');
+                $iconInvalid.removeClass('show');
+                $msg.removeClass('show valid invalid');
+
+                if (message !== undefined && message !== '') {
+                    $msg.text(message).addClass('show');
+
+                    if (isValid) {
+                        $input.addClass('valid');
+                        $iconValid.addClass('show');
+                        $msg.addClass('valid');
+                    } else {
+                        $input.addClass('invalid');
+                        $iconInvalid.addClass('show');
+                        $msg.addClass('invalid');
+                    }
+                }
+            }
+
+            // 清除字段状态
+            function clearFieldStatus(fieldId) {
+                showFieldStatus(fieldId, null, '');
+            }
+
+
+            // ========== 密码强度验证 ==========
+
+            // 检查密码各项规则
+            function checkPasswordRules(password) {
+                return {
+                    length: password.length >= 8,
+                    upper: /[A-Z]/.test(password),
+                    lower: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+                };
+            }
+
+            // 计算密码强度等级
+            function getPasswordLevel(rules) {
+                let score = 0;
+                if (rules.length) score++;
+                if (rules.upper) score++;
+                if (rules.lower) score++;
+                if (rules.number) score++;
+                if (rules.special) score++;
+
+                if (score <= 2) return 'weak';
+                if (score <= 3) return 'medium';
+                return 'strong';
+            }
+
+            // 更新密码强度UI
+            function updatePasswordStrengthUI(password) {
+                const $strength = $('#passwordStrength');
+                const $barFill = $('#strengthBarFill');
+                const $text = $('#strengthText');
+
+                if (password.length === 0) {
+                    $strength.hide();
+                    return;
+                }
+
+                $strength.show();
+
+                const rules = checkPasswordRules(password);
+                const level = getPasswordLevel(rules);
+
+                // 更新规则列表
+                $('#ruleLength').toggleClass('passed', rules.length);
+                $('#ruleUpper').toggleClass('passed', rules.upper);
+                $('#ruleLower').toggleClass('passed', rules.lower);
+                $('#ruleNumber').toggleClass('passed', rules.number);
+                $('#ruleSpecial').toggleClass('passed', rules.special);
+
+                // 更新强度条
+                $barFill.removeClass('strength-weak strength-medium strength-strong')
+                         .addClass('strength-' + level);
+
+                // 更新文字
+                const texts = {
+                    'weak': { text: '弱 - 建议增加复杂度', cls: 'strength-weak-text' },
+                    'medium': { text: '中等 - 可以更强', cls: 'strength-medium-text' },
+                    'strong': { text: '强 - 密码很安全', cls: 'strength-strong-text' }
+                };
+                $text.text(texts[level].text)
+                     .removeClass('strength-weak-text strength-medium-text strength-strong-text')
+                     .addClass(texts[level].cls);
+
+                return level;
+            }
+
+            // 密码输入事件（实时检测）
+            let passwordStrengthLevel = '';
+            $('#password').on('input', function() {
+                const password = $(this).val();
+                passwordStrengthLevel = updatePasswordStrengthUI(password);
+
+                // 如果确认密码已填写，重新检查一致性
+                if ($('#confirm_password').val()) {
+                    checkConfirmPassword();
+                }
+            });
+
+
+            // ========== 确认密码验证 ==========
+
+            function checkConfirmPassword() {
+                const password = $('#password').val();
+                const confirm = $('#confirm_password').val();
+
+                if (confirm === '') {
+                    clearFieldStatus('confirm');
+                    return false;
+                }
+
+                if (password === confirm) {
+                    showFieldStatus('confirm', true, '密码一致');
+                    return true;
+                } else {
+                    showFieldStatus('confirm', false, '两次输入的密码不一致');
+                    return false;
+                }
+            }
+
+            $('#confirm_password').on('input blur', checkConfirmPassword);
+
+
+            // ========== 用户名验证 ==========
+
+            let usernameTimer = null;
+
+            function validateUsername() {
+                const username = $('#username').val().trim();
+
+                if (username === '') {
+                    showFieldStatus('username', false, '请输入用户名');
+                    return false;
+                }
+
+                if (username.length < 3 || username.length > 20) {
+                    showFieldStatus('username', false, '用户名长度需在3-20个字符之间');
+                    return false;
+                }
+
+                // 格式：只允许字母、数字、下划线、中文
+                if (!/^[\u4e00-\u9fa5a-zA-Z0-9_]+$/.test(username)) {
+                    showFieldStatus('username', false, '用户名只能包含字母、数字、下划线和中文');
+                    return false;
+                }
+
+                // 异步检查是否已存在
+                clearTimeout(usernameTimer);
+                usernameTimer = setTimeout(function() {
+                    $.get('{{.url_check_username}}', { username: username }, function(result) {
+                        if (result.exists) {
+                            showFieldStatus('username', false, result.message);
+                        } else {
+                            showFieldStatus('username', true, result.message);
+                        }
+                    }).fail(function() {
+                        console.error('检查用户名失败');
+                    });
+                }, 500);
+
+                return true;
+            }
+
+            $('#username').on('blur', validateUsername)
+                          .on('input', function() { clearFieldStatus('username'); });
+
+
+            // ========== 邮箱格式验证 ==========
+
+            // 严格的邮箱格式正则
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            // 更严格：检查常见无效邮箱
+            const invalidEmailPatterns = [
+                /^.*\.\./,           // 连续点
+                /^.*@.*\.\./,       // 域名有连续点
+                /^[^@]*$/,          // 没有@
+                /@.*@/,             // 多个@
+                /^\./,              // 以点开头
+                /\.$/               // 以点结尾
+            ];
+
+            function isValidEmailFormat(email) {
+                // 先用基本正则
+                if (!emailRegex.test(email)) return false;
+                
+                // 再检查无效模式
+                for (let pattern of invalidEmailPatterns) {
+                    if (pattern.test(email)) return false;
+                }
+
+                // 检查域名部分
+                const domain = email.split('@')[1];
+                if (!domain || domain.split('.').length < 2) return false;
+                
+                // TLD至少2个字符
+                const tld = domain.split('.').pop();
+                if (tld.length < 2) return false;
+
+                return true;
+            }
+
+            let emailTimer = null;
+
+            function validateEmail() {
+                const email = $('#email').val().trim();
+
+                if (email === '') {
+                    showFieldStatus('email', false, '请输入邮箱地址');
+                    return false;
+                }
+
+                // 格式验证
+                if (!isValidEmailFormat(email)) {
+                    showFieldStatus('email', false, '邮箱格式不正确，请输入有效邮箱（如 example@163.com）');
+                    return false;
+                }
+
+                // 异步检查是否已存在
+                clearTimeout(emailTimer);
+                emailTimer = setTimeout(function() {
+                    $.get('{{.url_check_email}}', { email: email }, function(result) {
+                        if (result.exists) {
+                            showFieldStatus('email', false, result.message);
+                        } else {
+                            showFieldStatus('email', true, result.message);
+                        }
+                    }).fail(function() {
+                        console.error('检查邮箱失败');
+                    });
+                }, 500);
+
+                return true;
+            }
+
+            $('#email').on('blur', validateEmail)
+                      .on('input', function() { clearFieldStatus('email'); });
+
+
+            // ========== 发送验证码 ==========
+
+            let countdown = 0;
+            let countdownTimer = null;
+
+            $('#sendCodeBtn').on('click', async function() {
+                const $btn = $(this);
+                const email = $('#email').val().trim();
+                const $msg = $('#codeMsg');
+
+                if (!email) {
+                    alert('请先输入邮箱地址');
+                    $('#email').focus();
+                    return;
+                }
+
+                // 先验证邮箱格式
+                if (!isValidEmailFormat(email)) {
+                    showFieldStatus('email', false, '邮箱格式不正确，无法发送验证码');
+                    return;
+                }
+
+                // 检查邮箱是否已注册
+                try {
+                    const checkResult = await $.get('{{.url_check_email}}', { email: email });
+                    if (checkResult.exists) {
+                        alert('该邮箱已被注册，请更换其他邮箱');
+                        showFieldStatus('email', false, checkResult.message);
+                        return;
+                    }
+                } catch(e) {
+                    console.error('邮箱预检失败:', e);
+                }
+
+                $btn.prop('disabled', true);
+
+                try {
+                    const response = await $.ajax({
+                        url: '{{.url_send_code}}',
+                        method: 'POST',
+                        data: { email: email }
+                    });
+
+                    $msg.html('<span style="color: #27ae60;">' + response.message + '</span>');
+
+                    // 开始倒计时
+                    countdown = 60;
+                    countdownTimer = setInterval(function() {
+                        countdown--;
+                        if (countdown > 0) {
+                            $btn.text(countdown + '秒后重发');
+                        } else {
+                            clearInterval(countdownTimer);
+                            $btn.text('发送验证码').prop('disabled', false);
+                        }
+                    }, 1000);
+
+                } catch(error) {
+                    const err = error.responseJSON || {};
+                    $msg.html('<span style="color: #e74c3c;">' + (err.error || '发送失败，请重试') + '</span>');
+                    $btn.prop('disabled', false);
+                }
+            });
+
+
+            // ========== 表单提交验证 ==========
+
+            $('#registerForm').on('submit', function(e) {
+                const errors = [];
+
+                // 1. 用户名验证
+                const username = $('#username').val().trim();
+                if (!username || username.length < 3 || username.length > 20) {
+                    errors.push('请输入有效的用户名（3-20个字符）');
+                    showFieldStatus('username', false, '请输入有效的用户名（3-20个字符）');
+                }
+
+                // 2. 邮箱验证
+                const email = $('#email').val().trim();
+                if (!email || !isValidEmailFormat(email)) {
+                    errors.push('请输入有效的邮箱地址');
+                    showFieldStatus('email', false, '邮箱格式不正确');
+                }
+
+                // 3. 密码验证
+                const password = $('#password').val();
+                if (!password || password.length < 8) {
+                    errors.push('密码至少需要8个字符');
+                    $('#password').addClass('invalid').focus();
+                } else if (passwordStrengthLevel === 'weak') {
+                    // 弱密码只是警告，不阻止提交
+                    if (!confirm('您的密码强度较弱，建议使用大小写字母+数字+特殊字符的组合。确定继续吗？')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+
+                // 4. 确认密码验证
+                const confirmPassword = $('#confirm_password').val();
+                if (password !== confirmPassword) {
+                    errors.push('两次输入的密码不一致');
+                    showFieldStatus('confirm', false, '两次输入的密码不一致');
+                }
+
+                // 5. 验证码验证
+                const verifyCode = $('#verify_code').val().trim();
+                if (!verifyCode || verifyCode.length !== 6) {
+                    errors.push('请输入6位验证码');
+                }
+
+                if (errors.length > 0) {
+                    e.preventDefault();
+                    alert(errors.join('\n'));
+                    return false;
+                }
+
+                // 禁用提交按钮防止重复提交
+                $('#submitBtn').prop('disabled', true).text('正在注册...');
+            });
+
+        });
+    </script>
+</body>
+</html>

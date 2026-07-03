@@ -1,0 +1,72 @@
+# ===========================================
+# Gin Demo 应用配置文件
+# ===========================================
+
+# MySQL 数据库配置
+mysql:
+  host: 172.22.219.86
+  port: "3306"
+  user: root
+  password: 'JyCrUec0*OdD$dC@cz2u#My'
+  dbname: gin_project
+
+# MySQL 文章库配置（articles 表迁移至独立库）
+mysql_articles:
+  host: 172.22.219.86
+  port: "3306"
+  user: root
+  password: 'JyCrUec0*OdD$dC@cz2u#My'
+  dbname: articles
+
+# Redis 缓存配置
+redis:
+  host: 172.22.219.86
+  port: "6379"
+  password: 'Gexin..950228'
+
+# 邮件服务配置
+email:
+  smtp_host: smtp.163.com
+  smtp_port: 465
+  from: gexin17812126257@163.com
+  password: 'YPf3w5tv2gTmeNqd'
+
+# Swagger 接口文档配置
+swagger:
+  enabled: true   # 是否开启 Swagger 文档页面（生产环境建议关闭）
+
+# SkyWalking 链路追踪配置
+skywalking:
+  enabled: true                    # 是否启用链路追踪
+  backend: "172.22.219.86:11800"   # OAP gRPC 上报地址
+  service_name: "gin-demo"         # 服务名称（在 SkyWalking UI 中显示）
+  service_group: "gin-apps"        # 服务分组（Service Group，用于多服务归类）
+
+# 日志配置
+log:
+  level: "info"                    # 日志等级: debug / info / warn / error
+  format: "text"                  # 输出格式: json（生产） / text（开发）
+
+# Nacos 服务注册与发现配置
+nacos:
+  enabled: true                          # 是否启用 Nacos 服务注册
+  server_host: "172.29.147.221"           # Nacos 服务端地址
+  server_port: 8848                       # Nacos 服务端端口
+  username: "nacos"                      # Nacos 认证用户名
+  password: 'Gexin..950228'              # Nacos 认证密码
+  namespace_id: "gin-demo-id"            # 命名空间 ID
+  group: "DEFAULT_GROUP"                 # 服务分组
+  service_name: "gin-demo"               # 注册的服务名称
+  cluster: "DEFAULT"                     # 集群名称
+  service_port: 8080                     # 服务监听端口（注册到 Nacos 的端口）
+  service_ip: ""                         # 注册 IP，留空则自动获取本机内网 IP
+
+# MinIO 对象存储配置（用于头像存储）
+minio:
+  endpoint: "172.22.222.113:9000"           # MinIO API 地址
+  console_endpoint: "172.22.222.113:9001"   # MinIO 控制台地址（仅参考）
+  access_key: "minioadmin"
+  secret_key: "Minio2026Secure"
+  bucket: "user-icon"                        # 头像存储桶名
+  use_ssl: false
+  public_url: "http://172.22.222.113:9000"  # 拼接头像访问 URL 的对外地址

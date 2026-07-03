@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.article.Title}} - Gin Demo</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <style>
+        /* 页面特有样式 */
+        /* 文章详情样式 */
+        .article-detail { max-width: 900px; margin: 0 auto; }
+
+        .detail-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 2rem;
+            padding: 1rem 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e9ecef;
+            color: #6c757d;
+            font-size: 0.92rem;
+            flex-wrap: wrap;
+        }
+        .detail-meta span { display: flex; align-items: center; gap: 0.4rem; }
+
+        .detail-content {
+            line-height: 1.9;
+            color: #343a40;
+            font-size: 1rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .detail-actions {
+            margin-top: 2.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,144,226,0.4); }
+
+        .btn-secondary {
+            background: transparent;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+        .btn-secondary:hover { background-color: #f8f9fa; border-color: #adb5bd; }
+
+        .btn-edit {
+            background: transparent;
+            color: #f39c12;
+            border: 1px solid #f39c12;
+        }
+        .btn-edit:hover { background-color: #f39c12; color: white; }
+
+        /* 文章标签 */
+        .detail-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .detail-tag {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.82rem;
+            color: #4a90e2;
+            background: #eaf2fb;
+            border-radius: 14px;
+            border: 1px solid #c5ddf5;
+            font-weight: 500;
+        }
+        /* 评论区样式 */
+        .comment-section {
+            margin-top: 2.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #e9ecef;
+        }
+        .comment-section-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 1.2rem;
+        }
+        .comment-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: normal;
+        }
+
+        /* 评论输入 */
+        .comment-form { margin-bottom: 1.5rem; }
+        .comment-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .comment-textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 2px rgba(74,144,226,0.1);
+        }
+        .comment-submit-btn {
+            margin-top: 0.5rem;
+            padding: 0.5rem 1.5rem;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .comment-submit-btn:hover:not(:disabled) { background: #3a7bc8; }
+        .comment-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* 评论项 */
+        .comment-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .comment-item:last-child { border-bottom: none; }
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.5rem;
+        }
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4a90e2;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .comment-author {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.88rem;
+        }
+        .comment-time {
+            color: #adb5bd;
+            font-size: 0.78rem;
+        }
+        .comment-body {
+            margin-left: 42px;
+            color: #495057;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .comment-actions {
+            margin-left: 42px;
+            margin-top: 0.4rem;
+            display: flex;
+            gap: 1rem;
+        }
+        .comment-action-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.2s;
+        }
+        .comment-action-btn:hover { color: #4a90e2; }
+        .comment-action-btn.delete-btn:hover { color: #e74c3c; }
+
+        /* 回复列表 */
+        .comment-replies {
+            margin-left: 42px;
+            margin-top: 0.75rem;
+            padding-left: 1rem;
+            border-left: 3px solid #f1f3f5;
+        }
+        .comment-replies .comment-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        /* 回复中的“回复 @用户名”标记 */
+        .reply-to-arrow { color: #adb5bd; font-size: 0.8rem; font-weight: normal; margin: 0 0.2rem; }
+        .reply-to-name { color: #4a90e2; font-size: 0.85rem; font-weight: 500; cursor: pointer; }
+        .reply-to-name:hover { text-decoration: underline; }
+
+        /* 回复输入框（内联） */
+        .reply-form {
+            margin-left: 42px;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        .reply-form.show { display: block; }
+        .reply-form textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .reply-form textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+        .reply-form-actions {
+            margin-top: 0.4rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .reply-form-actions button {
+            padding: 0.35rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.82rem;
+        }
+        .reply-submit-btn { background: #4a90e2; color: white; }
+        .reply-cancel-btn { background: #f1f3f5; color: #495057; }
+
+        .comment-loading, .comment-empty {
+            text-align: center;
+            padding: 2rem;
+            color: #adb5bd;
+            font-size: 0.9rem;
+        }
+
+        /* 从消息通知跳转定位时的评论高亮 */
+        .comment-item.comment-highlight {
+            background: #fff8e1;
+            box-shadow: 0 0 0 2px #f39c12;
+            border-radius: 6px;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        /* 评论图片 */
+        .comment-form-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+        }
+        .comment-image-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.3rem 0.6rem;
+            cursor: pointer;
+            font-size: 0.82rem;
+            color: #495057;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s;
+        }
+        .comment-image-btn:hover { border-color: #4a90e2; color: #4a90e2; }
+        .comment-image-btn input[type=file] { display: none; }
+        .comment-image-tip {
+            font-size: 0.76rem;
+            color: #adb5bd;
+        }
+
+        /* 图片预览区 */
+        .comment-image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .comment-image-preview:empty { display: none; }
+        .preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+        }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.7rem;
+            line-height: 18px;
+            text-align: center;
+            padding: 0;
+        }
+        .preview-item.uploading::after {
+            content: '上传中...';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #495057;
+        }
+
+        /* 评论内容里的图片展示 */
+        .comment-images {
+            margin-left: 42px;
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        .comment-images img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .comment-images img:hover { transform: scale(1.05); }
+
+        /* 回复表单里的图片按钮和预览 */
+        .reply-form .comment-image-preview { margin-left: 0; }
+        .reply-form .reply-form-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.3rem;
+        }
+        .reply-form .comment-image-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.76rem;
+        }
+        .reply-form .preview-item { width: 60px; height: 60px; }
+
+        /* 图片大图预览弹层 */
+        .comment-image-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            cursor: zoom-out;
+        }
+        .comment-image-lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 4px;
+        }
+
+        /* Emoji 选择按钮 */
+        .emoji-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.3rem 0.6rem;
+            cursor: pointer;
+            font-size: 0.82rem;
+            color: #495057;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s;
+        }
+        .emoji-btn:hover { border-color: #4a90e2; color: #4a90e2; }
+        .emoji-btn.active { border-color: #4a90e2; color: #4a90e2; background: #eaf2fb; }
+
+        /* Emoji 面板 */
+        .emoji-panel {
+            position: absolute;
+            width: 320px;
+            max-height: 340px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+        }
+        .emoji-panel.show { display: flex; flex-direction: column; }
+        .emoji-panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #e9ecef;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+        .emoji-tab {
+            padding: 0.5rem 0.6rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .emoji-tab:hover { opacity: 1; }
+        .emoji-tab.active { opacity: 1; border-bottom: 2px solid #4a90e2; }
+        .emoji-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.4rem;
+        }
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+        }
+        .emoji-item {
+            font-size: 1.3rem;
+            text-align: center;
+            cursor: pointer;
+            padding: 0.25rem 0;
+            border-radius: 4px;
+            transition: background 0.15s;
+            line-height: 1.4;
+        }
+        .emoji-item:hover { background: #eaf2fb; }
+        .reply-form .emoji-btn { padding: 0.25rem 0.5rem; font-size: 0.76rem; }
+    </style>
+    <script>
+        if(localStorage.getItem('sidebar_expanded')==='true')document.write('<style>.sidebar{width:220px}</style>');
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{.url_home}}" class="navbar-brand">Gin Demo</a>
+        <div class="user-info">
+            <div class="user-dropdown">
+                <span class="user-name" onclick="toggleUserMenu()">
+                    <span class="user-avatar" id="navAvatar">
+                        {{if .avatar_url}}<img src="{{.avatar_url}}" alt="">{{else}}<span>{{slice .username 0 1}}</span>{{end}}
+                    </span>
+                    {{.username}} <span class="dropdown-arrow">&#9660;</span>
+                    <span class="approval-badge" id="approvalBadge" style="display:none;"></span>
+                </span>
+                <div class="dropdown-menu" id="userDropdownMenu">
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openAvatarModal()">
+                        &#128247; 修改头像
+                    </a>
+                    <a href="{{.url_approval_list}}" class="dropdown-item">
+                        &#9989; 我的审批
+                        <span class="badge-num" id="approvalBadgeNum"></span>
+                    </a>
+                    <a href="{{.url_logout}}" class="dropdown-item">&#128682; 退出登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像上传弹窗 -->
+    <div class="avatar-modal-mask" id="avatarModalMask" onclick="if(event.target===this)closeAvatarModal()">
+        <div class="avatar-modal">
+            <h3>修改头像</h3>
+            <div class="avatar-preview" id="avatarPreview">
+                <div class="avatar-preview-placeholder">点击下方按钮<br>选择图片</div>
+            </div>
+            <input type="file" class="avatar-file-input" id="avatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp">
+            <div class="avatar-modal-actions">
+                <button class="avatar-btn-cancel" onclick="closeAvatarModal()">取消</button>
+                <button class="avatar-btn-upload" id="avatarUploadBtn" onclick="uploadAvatar()" disabled>上传</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <button class="sidebar-toggle" id="sidebarToggle" title="展开导航" onclick="toggleSidebar()">&#9776;</button>
+        <div class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <div class="nav-header expanded active" onclick="toggleSubMenu(this)">
+                        <span><span class="tab-icon">&#128196;</span> 文章管理</span>
+                        <span class="arrow">&#9654;</span>
+                    </div>
+                    <ul class="nav-sub-menu show">
+                        <li><a href="{{.url_article_create}}">新增文章</a></li>
+                        <li><a href="{{.url_article_list}}">文章列表</a></li>
+                        <li><a href="{{.url_tag_manage}}">标签管理</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content-area">
+            <!-- 标签页栏（动态渲染） -->
+            <div class="tabs-container" id="tabsContainer"></div>
+
+            <div class="tab-content">
+                <div class="article-detail">
+                    <h1 class="detail-title">{{.article.Title}}</h1>
+
+                    <div class="detail-meta">
+                        <span>&#128100; {{.article.User.UserName}}</span>
+                        <span>&#128197; {{.article.CreatedAt.Format "2006-01-02 15:04:05"}}</span>
+                        {{if .article.Tags}}
+                        <span>&#128278;
+                            {{range $i, $t := .article.Tags}}{{if gt $i 0}}、{{end}}{{$t.Name}}{{end}}
+                        </span>
+                        {{end}}
+                    </div>
+
+                    {{if .article.Tags}}
+                    <div class="detail-tags">
+                        <span style="font-size: 0.82rem; color: #adb5bd;">&#128278; 标签：</span>
+                        {{range .article.Tags}}
+                        <span class="detail-tag">{{.Name}}</span>
+                        {{end}}
+                    </div>
+                    {{end}}
+
+                    <div class="detail-content">{{.article.Content}}</div>
+
+                    <div class="detail-actions">
+                        <a href="{{.url_article_list}}" class="action-btn btn-primary">&larr; 返回列表</a>
+                        <a href="{{.url_article_edit}}" class="action-btn btn-edit">&#9998; 编辑文章</a>
+                        <a href="{{.url_article_create}}" class="action-btn btn-secondary">&#43; 新增文章</a>
+                    </div>
+
+                    <!-- 评论区 -->
+                    <div class="comment-section">
+                        <h2 class="comment-section-title">&#128172; 评论 <span class="comment-count" id="commentCount">0</span></h2>
+
+                        <!-- 发表评论 -->
+                        <div class="comment-form">
+                            <textarea id="commentInput" class="comment-textarea" placeholder="写下你的评论...（支持 emoji 表情）" rows="3"></textarea>
+                            <div class="comment-form-toolbar">
+                                <button type="button" class="emoji-btn" onclick="toggleEmojiPanel('commentInput', this)">&#128578; 表情</button>
+                                <label class="comment-image-btn">
+                                    &#128247; 图片
+                                    <input type="file" id="commentImageInput" accept="image/jpeg,image/png,image/gif,image/webp" multiple onchange="onCommentImageSelect(this)">
+                                </label>
+                                <span class="comment-image-tip">最多3张，每张不超过1MB</span>
+                            </div>
+                            <div class="comment-image-preview" id="commentImagePreview"></div>
+                            <button class="comment-submit-btn" id="commentSubmitBtn" onclick="submitComment(0)">发表评论</button>
+                        </div>
+
+                        <!-- 评论列表 -->
+                        <div class="comment-list" id="commentList">
+                            <div class="comment-loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script>window.AVATAR_UPLOAD_URL = '{{.url_avatar_upload}}';</script>
+    <script src="/static/js/layout.js"></script>
+    <script>
+        function toggleSubMenu(header) {
+            $(header).toggleClass('expanded');
+            $(header).siblings('.nav-sub-menu').toggleClass('show');
+            $('.nav-header').not($(header)).removeClass('active');
+            if ($(header).hasClass('expanded')) { $(header).addClass('active'); }
+        }
+
+        // 侧边栏展开/收起（inline onclick 调用）
+        // 注：toggleUserMenu / openAvatarModal / closeAvatarModal / uploadAvatar
+        //     以及 #avatarFileInput 的 change 事件已抽到 /static/js/layout.js
+
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var btn = document.getElementById('sidebarToggle');
+            if (sb.classList.contains('sidebar-expanded')) {
+                sb.classList.remove('sidebar-expanded');
+                btn.innerHTML = '&#9776;';
+                btn.title = '展开导航';
+                btn.style.left = '0';
+                localStorage.setItem('sidebar_expanded', 'false');
+            } else {
+                sb.classList.add('sidebar-expanded');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+                localStorage.setItem('sidebar_expanded', 'true');
+            }
+        }
+
+        // ========== 标签页持久化管理系统 ==========
+        var CURRENT_PAGE_TAB = {
+            url: window.location.pathname + window.location.search,
+            title: "{{.article.Title}}".replace(/"/g, '&quot;').replace(/'/g, "\\'"),
+            icon: '&#128214;',
+            closable: true
+        };
+
+        var TAB_REGISTRY = {};
+        TAB_REGISTRY['{{.url_home}}']         = { title: '首页',     icon: '&#127968;', closable: false };
+        TAB_REGISTRY['{{.url_article_create}}'] = { title: '新增文章', icon: '&#9998;',   closable: true };
+        TAB_REGISTRY['{{.url_article_list}}']  = { title: '文章列表', icon: '&#128220;',  closable: true };
+        TAB_REGISTRY['{{.url_tag_manage}}']   = { title: '标签管理', icon: '&#128295;',  closable: true };
+
+        function getOpenTabs() {
+            try { return JSON.parse(localStorage.getItem('open_tabs') || '[]'); } catch(e) { return []; }
+        }
+        function saveOpenTabs(tabs) { localStorage.setItem('open_tabs', JSON.stringify(tabs)); }
+
+        function ensureCurrentTab(tabs) {
+            var url = CURRENT_PAGE_TAB.url;
+            if (!tabs.some(function(t) { return t.url === url; })) {
+                tabs.push({ url: url, title: CURRENT_PAGE_TAB.title, icon: CURRENT_PAGE_TAB.icon, closable: CURRENT_PAGE_TAB.closable });
+            }
+            return tabs;
+        }
+
+        function renderTabs() {
+            var $container = $('#tabsContainer'); $container.empty();
+            var tabs = getOpenTabs(); tabs = ensureCurrentTab(tabs); saveOpenTabs(tabs);
+            var currentUrl = CURRENT_PAGE_TAB.url;
+            for (var i = 0; i < tabs.length; i++) {
+                var tab = tabs[i];
+                var isActive = (tab.url === currentUrl) ? ' active' : '';
+                var closeHtml = tab.closable ? '<span class="tab-close" onclick="closeTab(event, this)">&times;</span>' : '';
+                $container.append('<a href="' + tab.url + '" class="tab-item' + isActive + '">' +
+                    '<span class="tab-icon">' + tab.icon + '</span><span>' + tab.title + '</span>' + closeHtml + '</a>');
+            }
+        }
+
+        function closeTab(event, element) {
+            event.preventDefault(); event.stopPropagation();
+            var $tab = $(element).closest('.tab-item');
+            var closeUrl = $tab.attr('href');
+            var isActive = $tab.hasClass('active');
+            var tabs = getOpenTabs();
+            tabs = tabs.filter(function(t) { return t.url !== closeUrl; });
+            saveOpenTabs(tabs);
+            if (isActive) {
+                window.location.href = tabs.length > 0 ? tabs[0].url : '{{.url_home}}';
+            } else { renderTabs(); }
+        }
+
+        function interceptNavClick(url) {
+            if (TAB_REGISTRY[url]) {
+                var info = TAB_REGISTRY[url];
+                var tabs = getOpenTabs();
+                if (!tabs.some(function(t) { return t.url === url; })) {
+                    tabs.push({ url: url, title: info.title, icon: info.icon, closable: info.closable });
+                    saveOpenTabs(tabs);
+                }
+            }
+        }
+
+        // ===== 评论功能 =====
+        var ARTICLE_ID = {{.article.ID}};
+        var CURRENT_USER_ID = {{.user_id}};
+        var URL_COMMENT_LIST = '{{.url_comment_list}}';
+        var URL_COMMENT_CREATE = '{{.url_comment_create}}';
+        var URL_COMMENT_DELETE = '{{.url_comment_delete}}';
+        var URL_COMMENT_IMAGE_UPLOAD = '{{.url_comment_image_upload}}';
+        var COMMENT_IMAGE_MAX_COUNT = 3;
+
+        // 顶级评论已上传的图片 URL 数组
+        var pendingCommentImages = [];
+        // 回复评论已上传的图片 URL 映射：{ commentId: [url, ...] }
+        var pendingReplyImages = {};
+
+        function loadComments() {
+            $.ajax({
+                url: URL_COMMENT_LIST,
+                type: 'GET',
+                data: { id: ARTICLE_ID },
+                success: function(resp) {
+                    renderComments(resp.comments || []);
+                    $('#commentCount').text(resp.count || 0);
+                    // 如果带 #comment-<id> 锚点（从消息通知跳来），滚动定位并高亮
+                    // SPA 模式下地址栏不变，优先读 window.SPA_TARGET_HASH；直接访问文章页时回退到 location.hash
+                    var targetHash = (window.SPA_TARGET_HASH || location.hash) || '';
+                    if (targetHash.indexOf('#comment-') === 0) {
+                        var targetId = targetHash.substring(1); // comment-<id>
+                        // 评论异步渲染后稍延迟再定位
+                        setTimeout(function() {
+                            var $target = $('#' + targetId);
+                            if ($target.length) {
+                                $target[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                $target.addClass('comment-highlight');
+                                setTimeout(function() { $target.removeClass('comment-highlight'); }, 3000);
+                            }
+                        }, 200);
+                    }
+                },
+                error: function() {
+                    $('#commentList').html('<div class="comment-empty">评论加载失败</div>');
+                }
+            });
+        }
+
+        function renderComments(comments) {
+            var $list = $('#commentList');
+            if (!comments || comments.length === 0) {
+                $list.html('<div class="comment-empty">还没有评论，快来抢沙发吧~</div>');
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < comments.length; i++) {
+                html += renderCommentItem(comments[i], false);
+            }
+            $list.html(html);
+        }
+
+        function renderCommentItem(c, isReply) {
+            // 头像
+            var avatarHtml = '';
+            if (c.avatar) {
+                avatarHtml = '<img src="' + escapeHtml(c.avatar) + '" alt="">';
+            } else {
+                avatarHtml = escapeHtml((c.user_name || '?').charAt(0).toUpperCase());
+            }
+
+            // 时间格式化
+            var dt = new Date(c.created_at);
+            var dateStr = formatTime(dt);
+
+            // 作者名：回复且 reply_to_user_name 非空时显示“作者 回复 @被回复者”
+            var authorHtml = escapeHtml(c.user_name || '匿名');
+            if (isReply && c.reply_to_user_name) {
+                authorHtml += ' <span class="reply-to-arrow">回复</span> <span class="reply-to-name">@' + escapeHtml(c.reply_to_user_name) + '</span>';
+            }
+
+            // 操作按钮（顶级和回复都有“回复”）
+            var actionsHtml = '<button class="comment-action-btn" onclick="toggleReplyForm(' + c.id + ')">回复</button>';
+            // 删除按钮：权限由后端判断，前端对登录用户都显示，后端拒绝则提示
+            actionsHtml += '<button class="comment-action-btn delete-btn" onclick="deleteComment(' + c.id + ')">删除</button>';
+
+            // 回复列表（仅顶级评论渲染其下平铺的回复；回复不再递归嵌套）
+            var repliesHtml = '';
+            if (!isReply && c.replies && c.replies.length > 0) {
+                repliesHtml = '<div class="comment-replies">';
+                for (var j = 0; j < c.replies.length; j++) {
+                    repliesHtml += renderCommentItem(c.replies[j], true);
+                }
+                repliesHtml += '</div>';
+            }
+
+            // 回复表单
+            var replyFormHtml = '<div class="reply-form" id="replyForm-' + c.id + '">' +
+                '<textarea id="replyInput-' + c.id + '" placeholder="回复 ' + escapeHtml(c.user_name || '') + '..." rows="2"></textarea>' +
+                '<div class="reply-form-toolbar">' +
+                    '<button type="button" class="emoji-btn" onclick="toggleEmojiPanel(\'replyInput-' + c.id + '\', this)">&#128578; 表情</button>' +
+                    '<label class="comment-image-btn">&#128247; 图片' +
+                        '<input type="file" id="replyImageInput-' + c.id + '" accept="image/jpeg,image/png,image/gif,image/webp" multiple onchange="onReplyImageSelect(' + c.id + ', this)">' +
+                    '</label>' +
+                '</div>' +
+                '<div class="comment-image-preview" id="replyImagePreview-' + c.id + '"></div>' +
+                '<div class="reply-form-actions">' +
+                    '<button class="reply-submit-btn" onclick="submitReply(' + c.id + ')">回复</button>' +
+                    '<button class="reply-cancel-btn" onclick="toggleReplyForm(' + c.id + ')">取消</button>' +
+                '</div>' +
+            '</div>';
+
+            // 评论图片
+            var imagesHtml = '';
+            var imgs = parseCommentImages(c.images);
+            if (imgs.length > 0) {
+                imagesHtml = '<div class="comment-images">';
+                for (var k = 0; k < imgs.length; k++) {
+                    imagesHtml += '<img src="' + escapeHtml(imgs[k]) + '" onclick="showImageLightbox(\'' + escapeHtml(imgs[k]) + '\')">';
+                }
+                imagesHtml += '</div>';
+            }
+
+            return '<div class="comment-item" id="comment-' + c.id + '">' +
+                '<div class="comment-header">' +
+                    '<span class="comment-avatar">' + avatarHtml + '</span>' +
+                    '<span class="comment-author">' + authorHtml + '</span>' +
+                    '<span class="comment-time">' + dateStr + '</span>' +
+                '</div>' +
+                '<div class="comment-body">' + escapeHtml(c.content) + '</div>' +
+                imagesHtml +
+                '<div class="comment-actions">' + actionsHtml + '</div>' +
+                replyFormHtml +
+                repliesHtml +
+            '</div>';
+        }
+
+        function toggleReplyForm(commentId) {
+            $('#replyForm-' + commentId).toggleClass('show');
+            if ($('#replyForm-' + commentId).hasClass('show')) {
+                $('#replyInput-' + commentId).focus();
+            }
+        }
+
+        // 发表顶级评论
+        function submitComment(parentId) {
+            var content = $('#commentInput').val().trim();
+            if (!content && pendingCommentImages.length === 0) {
+                alert('请输入评论内容或选择图片');
+                return;
+            }
+            doSubmitComment(content, parentId, pendingCommentImages, function() {
+                $('#commentInput').val('');
+                pendingCommentImages = [];
+                renderCommentImagePreview();
+                loadComments();
+            });
+        }
+
+        // 回复评论
+        function submitReply(parentId) {
+            var content = $('#replyInput-' + parentId).val().trim();
+            var imgs = pendingReplyImages[parentId] || [];
+            if (!content && imgs.length === 0) {
+                alert('请输入回复内容或选择图片');
+                return;
+            }
+            doSubmitComment(content, parentId, imgs, function() {
+                toggleReplyForm(parentId);
+                pendingReplyImages[parentId] = [];
+                renderReplyImagePreview(parentId);
+                loadComments();
+            });
+        }
+
+        function doSubmitComment(content, parentId, images, onSuccess) {
+            $.ajax({
+                url: URL_COMMENT_CREATE,
+                type: 'POST',
+                data: {
+                    article_id: ARTICLE_ID,
+                    content: content,
+                    parent_id: parentId || 0,
+                    images: JSON.stringify(images || [])
+                },
+                success: function(resp) {
+                    onSuccess();
+                },
+                error: function(xhr) {
+                    var msg = '评论失败';
+                    if (xhr.status === 404) msg = '文章不存在';
+                    try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+                    alert(msg);
+                }
+            });
+        }
+
+        function deleteComment(commentId) {
+            if (!confirm('确定删除这条评论吗？')) return;
+            $.ajax({
+                url: URL_COMMENT_DELETE,
+                type: 'POST',
+                data: { comment_id: commentId },
+                success: function() {
+                    loadComments();
+                },
+                error: function(xhr) {
+                    var msg = '删除失败';
+                    if (xhr.status === 403) msg = '无权删除此评论';
+                    if (xhr.status === 400) msg = '请先删除该评论下的回复';
+                    try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+                    alert(msg);
+                }
+            });
+        }
+
+        function formatTime(dt) {
+            var now = new Date();
+            var diff = (now - dt) / 1000; // 秒
+            if (diff < 60) return '刚刚';
+            if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+            if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
+            if (diff < 2592000) return Math.floor(diff / 86400) + '天前';
+            return dt.getFullYear() + '-' +
+                String(dt.getMonth()+1).padStart(2,'0') + '-' +
+                String(dt.getDate()).padStart(2,'0') + ' ' +
+                String(dt.getHours()).padStart(2,'0') + ':' +
+                String(dt.getMinutes()).padStart(2,'0');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        // ===== 评论图片功能 =====
+
+        // 解析评论的 images 字段（后端返回 JSON 数组字符串或空串）
+        function parseCommentImages(raw) {
+            if (!raw) return [];
+            try {
+                var arr = JSON.parse(raw);
+                return Array.isArray(arr) ? arr : [];
+            } catch(e) {
+                return [];
+            }
+        }
+
+        // 顶级评论：选择图片时触发
+        function onCommentImageSelect(input) {
+            handleImageSelect(input, pendingCommentImages, 'commentImagePreview', function() {
+                renderCommentImagePreview();
+            });
+        }
+
+        // 回复评论：选择图片时触发
+        function onReplyImageSelect(commentId, input) {
+            if (!pendingReplyImages[commentId]) pendingReplyImages[commentId] = [];
+            handleImageSelect(input, pendingReplyImages[commentId], 'replyImagePreview-' + commentId, function() {
+                renderReplyImagePreview(commentId);
+            });
+        }
+
+        // 通用：处理多文件选择，逐个上传到 MinIO
+        function handleImageSelect(input, targetArray, previewContainerId, onDone) {
+            var files = input.files;
+            if (!files || files.length === 0) return;
+
+            // 数量上限校验
+            var remaining = COMMENT_IMAGE_MAX_COUNT - targetArray.length;
+            if (remaining <= 0) {
+                alert('最多只能上传' + COMMENT_IMAGE_MAX_COUNT + '张图片');
+                input.value = '';
+                return;
+            }
+            var toUpload = Array.prototype.slice.call(files, 0, remaining);
+            if (files.length > remaining) {
+                alert('最多只能上传' + COMMENT_IMAGE_MAX_COUNT + '张图片，已自动截取前' + remaining + '张');
+            }
+
+            var done = 0;
+            for (var i = 0; i < toUpload.length; i++) {
+                (function(f) {
+                    // 大小校验（前端兜底，后端也会校验）
+                    if (f.size > 1024 * 1024) {
+                        alert('图片「' + f.name + '」超过1MB，已跳过');
+                        done++;
+                        if (done === toUpload.length) { input.value = ''; onDone(); }
+                        return;
+                    }
+                    var fd = new FormData();
+                    fd.append('file', f);
+                    // 先加占位预览
+                    var placeholderId = 'ph_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+                    $('#' + previewContainerId).append(
+                        '<div class="preview-item uploading" id="' + placeholderId + '"></div>'
+                    );
+                    $.ajax({
+                        url: URL_COMMENT_IMAGE_UPLOAD,
+                        type: 'POST',
+                        data: fd,
+                        processData: false,
+                        contentType: false,
+                        success: function(resp) {
+                            if (resp && resp.url) {
+                                targetArray.push(resp.url);
+                                // 用 data 属性绑定，由事件委托统一处理删除
+                                $('#' + placeholderId).removeClass('uploading').html(
+                                    '<img src="' + escapeHtml(resp.url) + '" alt="">' +
+                                    '<button class="remove-btn" data-container="' + escapeHtml(previewContainerId) + '" data-index="' + (targetArray.length-1) + '" data-pid="' + placeholderId + '">&times;</button>'
+                                );
+                            } else {
+                                $('#' + placeholderId).remove();
+                            }
+                        },
+                        error: function(xhr) {
+                            $('#' + placeholderId).remove();
+                            var msg = '图片上传失败';
+                            try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+                            alert('图片「' + f.name + '」上传失败：' + msg);
+                        },
+                        complete: function() {
+                            done++;
+                            if (done === toUpload.length) { input.value = ''; onDone(); }
+                        }
+                    });
+                })(toUpload[i]);
+            }
+            if (toUpload.length === 0) { input.value = ''; }
+        }
+
+        // 移除已上传的图片（从预览和数据中删除）
+        function removeImage(previewContainerId, index, placeholderId) {
+            // 根据 previewContainerId 判断是顶级还是回复
+            if (previewContainerId === 'commentImagePreview') {
+                pendingCommentImages.splice(index, 1);
+            } else {
+                // replyImagePreview-<commentId>
+                var cid = parseInt(previewContainerId.replace('replyImagePreview-', ''), 10);
+                if (pendingReplyImages[cid]) {
+                    pendingReplyImages[cid].splice(index, 1);
+                }
+            }
+            $('#' + placeholderId).remove();
+            // 重新渲染以修正索引
+            if (previewContainerId === 'commentImagePreview') {
+                renderCommentImagePreview();
+            } else {
+                var cid2 = parseInt(previewContainerId.replace('replyImagePreview-', ''), 10);
+                renderReplyImagePreview(cid2);
+            }
+        }
+
+        // 渲染顶级评论图片预览（带正确索引）
+        function renderCommentImagePreview() {
+            var $c = $('#commentImagePreview');
+            $c.empty();
+            for (var i = 0; i < pendingCommentImages.length; i++) {
+                $c.append(makePreviewItem(pendingCommentImages[i], i, 'commentImagePreview'));
+            }
+        }
+
+        // 渲染回复图片预览（带正确索引）
+        function renderReplyImagePreview(commentId) {
+            var $c = $('#replyImagePreview-' + commentId);
+            $c.empty();
+            var arr = pendingReplyImages[commentId] || [];
+            for (var i = 0; i < arr.length; i++) {
+                $c.append(makePreviewItem(arr[i], i, 'replyImagePreview-' + commentId));
+            }
+        }
+
+        // 生成单个预览项 HTML（使用 data 属性绑定，避免 onclick 字符串拼接问题）
+        var previewItemSeq = 0;
+        function makePreviewItem(url, index, containerId) {
+            var pid = 'pv_' + (++previewItemSeq);
+            var html = '<div class="preview-item" id="' + pid + '">' +
+                '<img src="' + escapeHtml(url) + '" alt="">' +
+                '<button class="remove-btn" data-container="' + escapeHtml(containerId) + '" data-index="' + index + '" data-pid="' + pid + '">&times;</button>' +
+            '</div>';
+            return html;
+        }
+
+        // 点击大图查看
+        function showImageLightbox(url) {
+            var $lb = $('<div class="comment-image-lightbox"></div>').append(
+                $('<img>').attr('src', url)
+            );
+            $lb.on('click', function() { $(this).remove(); });
+            $('body').append($lb);
+        }
+
+        // ===== Emoji 选择面板 =====
+        // 按 emoji 的 Unicode 字符串存储，直接插入文本，后端 content 字段即可保存
+        var EMOJI_CATEGORIES = [
+            { name: '😀', label: '笑脸', emojis: '😀 😃 😄 😁 😆 😅 😂 🤣 🥲 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🤢 🤮 🤧 😷 🤒 🤕 🤠 🥴 😬' },
+            { name: '👍', label: '手势', emojis: '👍 👎 👊 ✊ 🤛 🤜 👏 🙌 👐 🤲 🙏 🤝 💪 👋 🤚 ✋ 🖖 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 👈 👉 👆 👇 ☝️ ✍️ 💅 🤳' },
+            { name: '❤️', label: '爱心', emojis: '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 💯 ✨ 🌟 ⭐ 🎉 🎊 🎈 🎁 🎀 🔥 💥' },
+            { name: '🐶', label: '动物', emojis: '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🐔 🐧 🐦 🐤 🦆 🦅 🦉 🐺 🐗 🐴 🦄 🐝 🦋 🐌 🐞 🐢 🐍 🐙 🐠 🐬 🐳 🐋 🦈 🐘 🦒 🐪 🐨 🐰' },
+            { name: '🍎', label: '食物', emojis: '🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🫐 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🍆 🥑 🥦 🥒 🌽 🥕 🍠 🥐 🍞 🥖 🧀 🥚 🍳 🥞 🍔 🍟 🍕 🌭 🥪 🌮 🥗 🍜 🍝 🍣 🍱 🍙 🍚 🍘 🍥 🍢 🍡 🍧 🍨 🍦 🥧 🍰 🎂 🍬 🍭 🍫 🍩 🍪 🌰 🍯 ☕ 🍵 🍺 🍻 🍷 🥂 🍸 🥃' },
+            { name: '⚽', label: '活动', emojis: '⚽ 🏀 🏈 ⚾ 🎾 🏐 🏉 🎱 🏓 🏸 🏒 🏑 🏏 ⛳ 🏹 🎣 🥊 🥋 🎽 🛹 🚲 🏍️ 🏆 🥇 🥈 🥉 🏅 🎖️ 🎫 🎪 🎭 🎨 🎬 🎤 🎧 🎼 🎹 🥁 🎷 🎺 🎸 🎻 🎲 🎯 🎳 🎮 🧩 🎁 🎉 🎊' },
+            { name: '🚗', label: '旅行', emojis: '🚗 🚕 🚙 🚌 🚎 🏎️ 🚓 🚑 🚒 🚚 🚜 🚲 🛵 🏍️ 🚨 🚔 🚍 🚘 🚖 🚡 🚠 🚟 🚃 🚋 🚞 🚝 🚄 🚅 🚈 🚂 🚆 🚇 🚊 ✈️ 🛫 🛬 🛩️ 🚀 🛸 🚁 ⛵ 🚤 🛳️ ⛴️ 🚢 ⚓ ⛽ 🚦 🚥 🚏 🗺️ 🗽 🗼 🏰 🏯 🏟️ 🎡 🎢 🎠 ⛲ 🏖️ 🏝️ 🌋 ⛰️ 🏔️ 🗻 🏕️ ⛺ 🌁 🌃 🏙️ 🌄 🌅 🌠 🎇 🎆' },
+            { name: '⌚', label: '物品', emojis: '⌚ 📱 💻 ⌨️ 🖥️ 🖨️ 🖱️ 🕹️ 💾 💿 📀 📷 📸 📹 🎥 📞 ☎️ 📺 📻 🎙️ ⏰ ⌛ ⏳ 🔋 🔌 💡 🔦 🕯️ 💸 💵 💴 💶 💷 💰 💳 💎 ⚖️ 🔧 🔨 🛠️ ⛏️ 🔩 ⚙️ 🔗 🧲 🔪 🗡️ ⚔️ 🛡️ 🔮 📿 💈 🔭 🔬 🩹 🩺 💊 💉 🧬 🌡️ 🧹 🧺 🚽 🚿 🛁 🧼 🪒 🔑 🗝️ 🚪 🪑 🛋️ 🛏️ 🧸 🖼️ 🪞 🛍️ 🛒 🎁 🎈 🎀' },
+            { name: '✅', label: '符号', emojis: '✅ ❌ ❓ ❗ ⚠️ 🔴 🟠 🟡 🟢 🔵 🟣 ⚫ ⚪ 🟤 🔺 🔻 🔸 🔹 🔶 🔷 ♻️ 🔱 ⚕️ ♾️ 🔯 ⚛️ ☯️ ☮️ ✡️ ☪️ ✝️ 🕉️ ☸️ Ⓐ 💯 🔢 🔠 🔡 🔣 🔤 🅰️ 🆎 🆑 🅾️ 🆘 ⭕ 🛑 ⛔ ✔️ ☑️ ✖️ ➕ ➖ ➗ ➰ ➿ 〽️ ✳️ ✴️ ❇️ ‼️ ⁉️ 〰️ ©️ ®️ ™️ #⃣ *⃣ 0⃣ 1⃣ 2⃣ 3⃣ 4⃣ 5⃣ 6⃣ 7⃣ 8⃣ 9⃣ 🔟' }
+        ];
+        var emojiPanelTargetTextareaId = null;
+        var emojiPanelCurrentTab = 0;
+
+        function ensureEmojiPanel() {
+            if ($('#emojiPanel').length) return $('#emojiPanel');
+            var tabsHtml = '';
+            for (var i = 0; i < EMOJI_CATEGORIES.length; i++) {
+                tabsHtml += '<button type="button" class="emoji-tab' + (i === 0 ? ' active' : '') + '" data-tab="' + i + '" title="' + escapeHtml(EMOJI_CATEGORIES[i].label) + '">' + EMOJI_CATEGORIES[i].name + '</button>';
+            }
+            var $panel = $('<div class="emoji-panel" id="emojiPanel"><div class="emoji-panel-tabs">' + tabsHtml + '</div><div class="emoji-panel-content" id="emojiPanelContent"></div></div>');
+            $('body').append($panel);
+            // 分类切换
+            $panel.on('click', '.emoji-tab', function(e) {
+                e.stopPropagation();
+                emojiPanelCurrentTab = parseInt($(this).data('tab'), 10);
+                $panel.find('.emoji-tab').removeClass('active');
+                $(this).addClass('active');
+                renderEmojiGrid();
+            });
+            // 点击 emoji 插入
+            $panel.on('click', '.emoji-item', function(e) {
+                e.stopPropagation();
+                var emoji = $(this).data('emoji');
+                insertEmojiAtCursor(emojiPanelTargetTextareaId, emoji);
+            });
+            // 点击面板内部不关闭
+            $panel.on('click', function(e) { e.stopPropagation(); });
+            // 点击外部关闭
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#emojiPanel').length && !$(e.target).closest('.emoji-btn').length) {
+                    $panel.removeClass('show');
+                    $('.emoji-btn').removeClass('active');
+                }
+            });
+            return $panel;
+        }
+
+        function renderEmojiGrid() {
+            var cat = EMOJI_CATEGORIES[emojiPanelCurrentTab];
+            if (!cat) return;
+            var emojis = cat.emojis.split(/\s+/);
+            var html = '<div class="emoji-grid">';
+            for (var i = 0; i < emojis.length; i++) {
+                if (!emojis[i]) continue;
+                html += '<div class="emoji-item" data-emoji="' + escapeHtml(emojis[i]) + '">' + emojis[i] + '</div>';
+            }
+            html += '</div>';
+            $('#emojiPanelContent').html(html);
+        }
+
+        function toggleEmojiPanel(textareaId, btnEl) {
+            var $panel = ensureEmojiPanel();
+            // 切换目标
+            if (emojiPanelTargetTextareaId !== textareaId || !$panel.hasClass('show')) {
+                emojiPanelTargetTextareaId = textareaId;
+                emojiPanelCurrentTab = 0;
+                $panel.find('.emoji-tab').removeClass('active').first().addClass('active');
+                renderEmojiGrid();
+                // 定位到按钮下方
+                var $btn = $(btnEl);
+                var offset = $btn.offset();
+                var panelTop = offset.top + $btn.outerHeight() + 4;
+                var panelLeft = offset.left;
+                // 防止溢出右侧
+                var panelW = 320;
+                if (panelLeft + panelW > $(window).width()) {
+                    panelLeft = $(window).width() - panelW - 10;
+                }
+                $panel.css({ top: panelTop, left: panelLeft }).addClass('show');
+                $('.emoji-btn').removeClass('active');
+                $btn.addClass('active');
+            } else {
+                $panel.removeClass('show');
+                $('.emoji-btn').removeClass('active');
+            }
+        }
+
+        // 在 textarea 光标位置插入文本，并聚焦回 textarea
+        function insertEmojiAtCursor(textareaId, text) {
+            var ta = document.getElementById(textareaId);
+            if (!ta) return;
+            ta.focus();
+            var start = ta.selectionStart;
+            var end = ta.selectionEnd;
+            var val = ta.value;
+            ta.value = val.slice(0, start) + text + val.slice(end);
+            var newPos = start + text.length;
+            ta.setSelectionRange(newPos, newPos);
+            // 触发 input 事件以便后续逻辑（如有）感知变化
+            ta.dispatchEvent(new Event('input'));
+        }
+
+        // 事件委托：处理预览项删除按钮点击
+        $(document).on('click', '.preview-item .remove-btn', function(e) {
+            e.preventDefault();
+            var containerId = $(this).data('container');
+            var index = parseInt($(this).data('index'), 10);
+            var pid = $(this).data('pid');
+            removeImage(containerId, index, pid);
+        });
+
+        $(document).ready(function() {
+            loadComments(); // 加载评论
+            // 恢复侧边栏状态
+            if (localStorage.getItem('sidebar_expanded') === 'true') {
+                document.getElementById('sidebar').classList.add('sidebar-expanded');
+                var btn = document.getElementById('sidebarToggle');
+                btn.innerHTML = '&#10005;';
+                btn.title = '收起导航';
+                btn.style.left = '220px';
+            }
+
+            renderTabs();
+            var currentPath = window.location.pathname;
+            $('.nav-sub-menu a').each(function() {
+                var href = $(this).attr('href');
+                if (currentPath.includes(href) || $(this).hasClass('active')) {
+                    $(this).addClass('active');
+                    $(this).closest('.nav-sub-menu').addClass('show')
+                           .siblings('.nav-header').addClass('expanded active');
+                }
+            });
+            $('.nav-sub-menu a').on('click', function() { interceptNavClick($(this).attr('href')); });
+        });
+    </script>
+</body>
+</html>
